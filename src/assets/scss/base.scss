@@ -1,0 +1,16 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+    outline: 0;
+}
+
+html, body {
+    min-width: 320px;
+    color: $color;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 300;
+    line-height: 1.5;
+}
+
+b {
+    font-weight: 500;
+}

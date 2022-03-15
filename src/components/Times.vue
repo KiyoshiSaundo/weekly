@@ -1,47 +1,105 @@
 <template>
-    <ul>
-        <li v-for="group in result" :key="group.id">
-            <b>{{ group.name }} - {{ timeFormat(group.seconds) }}</b>
-            <ul>
-                <li v-for="task in group.tasks" :key="task.id">
-                    {{ task.name }} - {{ timeFormat(task.seconds) }}
-                </li>
-            </ul>
-        </li>
-    </ul>
+    <div class="groups">
+        <div class="groups__item" v-for="group in result" :key="group.id">
+            <label class="groups__label">
+                <input
+                    class="groups__checkbox"
+                    type="checkbox"
+                    value="group.id"
+                    v-model="group.selected"
+                />
+                <span class="groups__name">{{ group.name }}</span>
+                <span class="groups__time"
+                    >({{ formatTime(group.seconds) }})</span
+                >
+            </label>
+            <div class="groups__tasks">
+                <div
+                    class="groups__task"
+                    v-for="task in group.tasks"
+                    :key="task.id"
+                >
+                    <TaskItem :fields="task" />
+                </div>
+            </div>
+        </div>
+        <div class="groups__footer">
+            <div class="groups__checked">
+                Сумма выбранных: {{ formatTime(checkedSumm) }}
+            </div>
+            <div class="groups__total">
+                Всего затрачено: {{ formatTime(totalSumm) }}
+            </div>
+        </div>
+    </div>
 </template>
 
 <script>
-import {getTimes, getTasks, getGroups} from '@/api';
+import {formatDate, formatTime} from '@/functions';
+import {getApiTimes, getApiTasks, getApiGroups} from '@/api';
+import TaskItem from '@/components/TaskItem.vue';
 
 export default {
     name: 'Tasks',
+    components: {
+        TaskItem,
+    },
     data() {
         return {
-            userId: 59,
-            dateStart: '21.02.2022',
-            dateEnd: '27.02.2022',
             result: {},
         };
     },
+    computed: {
+        settings() {
+            return {
+                apiUrl: this.$store.state.apiUrl,
+                userId: this.$store.state.userId,
+                dateFrom: this.$store.state.dateFrom,
+                dateTo: this.$store.state.dateTo,
+            };
+        },
+        checkedSumm() {
+            let r = 0;
+            for (const [id, item] of Object.entries(this.result)) {
+                if (item.selected === true) r += item.seconds;
+            }
+            return r;
+        },
+        totalSumm() {
+            let r = 0;
+            for (const [id, item] of Object.entries(this.result)) {
+                r += item.seconds;
+            }
+            return r;
+        },
+    },
+    watch: {
+        settings: {
+            handler(newValue, oldValue) {
+                if (newValue !== oldValue) {
+                    this.getData();
+                }
+            },
+            deep: true,
+        },
+    },
     created() {
-        this.init();
+        this.getData();
     },
     methods: {
-        init() {
+        formatDate,
+        formatTime,
+
+        getData() {
             let groups = {},
                 tasks = {},
                 times = {};
 
-            let url = new URL(window.location.href);
-            this.dateStart = url.searchParams.get('start') || this.dateStart;
-            this.dateEnd = url.searchParams.get('end') || this.dateEnd;
-
             // записи о затраченном времени
-            getTimes({
-                USER_ID: this.userId,
-                '>=CREATED_DATE': this.dateStart,
-                '<=CREATED_DATE': this.dateEnd,
+            getApiTimes(this.$store.state.apiUrl, {
+                USER_ID: this.$store.state.userId,
+                '>=CREATED_DATE': formatDate(this.$store.state.dateFrom),
+                '<=CREATED_DATE': formatDate(this.$store.state.dateTo),
             })
                 .then((res) => {
                     let filter = [];
@@ -55,7 +113,7 @@ export default {
                     });
 
                     // записи о задачах
-                    return getTasks({
+                    return getApiTasks(this.$store.state.apiUrl, {
                         ID: filter,
                     });
                 })
@@ -72,7 +130,7 @@ export default {
                     });
 
                     // записи о группах
-                    return getGroups({
+                    return getApiGroups(this.$store.state.apiUrl, {
                         ID: filter,
                     });
                 })
@@ -83,11 +141,13 @@ export default {
                             name: item.NAME,
                             tasks: {},
                             seconds: 0,
+                            selected: this.result[item.ID]
+                                ? this.result[item.ID].selected
+                                : false,
                         };
                     });
 
                     // собираем все вместе
-
                     for (const [id, item] of Object.entries(times)) {
                         tasks[item.taskId].seconds += item.seconds;
                     }
@@ -107,19 +167,56 @@ export default {
                     this.result = groups;
                 });
         },
-        timeFormat(seconds) {
-            let h, m, s;
-
-            h = Math.floor(seconds / 3600);
-            m = Math.floor(seconds / 60) - h * 60;
-            s = seconds % 60;
-
-            return [
-                h.toString().padStart(2, '0'),
-                m.toString().padStart(2, '0'),
-                s.toString().padStart(2, '0'),
-            ].join(':');
-        },
     },
 };
 </script>
+
+<style lang="scss">
+.groups {
+    &__item {
+        margin-bottom: 15px;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+
+    &__label {
+        line-height: 1;
+        display: flex;
+        justify-content: flex-start;
+        align-items: baseline;
+    }
+
+    &__checkbox {
+        margin-right: 10px;
+    }
+
+    &__name {
+        font-weight: 700;
+    }
+
+    &__time {
+        margin-left: 5px;
+    }
+
+    &__tasks {
+        margin-top: 5px;
+        padding-left: 30px;
+    }
+
+    &__footer {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid $color-divide;
+    }
+
+    &__checked {
+        margin-bottom: 5px;
+    }
+
+    &__total {
+        font-weight: 700;
+    }
+}
+</style>
