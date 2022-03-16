@@ -1,15 +1,15 @@
 <template>
-    <div class="weekly">
+    <div class="weekly" :class="{'is-loading': this.$store.state.isLoading}">
         <Header />
         <Settings />
-        <Times />
+        <Groups />
     </div>
 </template>
 
 <script>
 import Header from '@/components/Header.vue';
 import Settings from '@/components/Settings.vue';
-import Times from '@/components/Times.vue';
+import Groups from '@/components/Groups.vue';
 
 import 'normalize.css';
 
@@ -18,8 +18,8 @@ export default {
     components: {
         Header,
         Settings,
-        Times,
-    }
+        Groups,
+    },
 };
 </script>
 
@@ -30,5 +30,11 @@ export default {
     margin: 20px auto;
     border: 1px solid $color-divide;
     padding: 20px;
+    position: relative;
+
+    &.is-loading {
+        pointer-events: none;
+        opacity: 0.5;
+    }
 }
 </style>

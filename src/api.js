@@ -2,6 +2,20 @@ import axios from 'axios';
 
 // затраченное время по фильтру
 export const getApiTimes = async (url, filter) => {
+    // return fetch(url + '/task.elapseditem.getlist', {
+    //     method: 'post',
+    //     headers: {
+    //         'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify({
+    //         order: {ID: 'asc'},
+    //         filter: filter,
+    //         select: ['ID', 'TASK_ID', 'SECONDS'],
+    //         params: {
+    //             NAV_PARAMS: {nPageSize: 0},
+    //         },
+    //     }),
+    // }).then((response) => response.json());
     return axios.post(url + '/task.elapseditem.getlist', {
         order: {ID: 'asc'},
         filter: filter,
