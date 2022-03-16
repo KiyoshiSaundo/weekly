@@ -1,19 +1,21 @@
 <template>
     <div class="settings">
-        <div class="settings__item">
-            <label class="settings__label">Строка API</label>
-            <input class="settings__input" type="text" v-model="apiUrl" />
-        </div>
-        <div class="settings__item">
-            <label class="settings__label">ID пользователя</label>
-            <input class="settings__input" type="text" v-model="userId" />
-        </div>
-        <div class="settings__item">
-            <label class="settings__label">Период</label>
-            <input class="settings__input" type="text" name="dates" />
-        </div>
-        <div class="settings__item">
-            <button class="settings__btn" @click="setSettings">Применить</button>
+        <div class="settings__items">
+            <div class="settings__item">
+                <label class="settings__label">Строка API</label>
+                <input class="settings__input" type="text" v-model="apiUrl" />
+            </div>
+            <div class="settings__item">
+                <label class="settings__label">ID пользователя</label>
+                <input class="settings__input" type="text" v-model="userId" />
+            </div>
+            <div class="settings__item">
+                <label class="settings__label">Период</label>
+                <input class="settings__input" type="text" name="dates" />
+            </div>
+            <div class="settings__item">
+                <button class="settings__btn" @click="setSettings">Применить</button>
+            </div>
         </div>
     </div>
 </template>
@@ -64,14 +66,17 @@ export default {
 
 <style lang="scss">
 .settings {
-    display: flex;
-    justify-content: flex-start;
-    align-items: flex-end;
-    margin-left: -5px;
-    margin-right: -5px;
     margin-bottom: 20px;
     padding-bottom: 20px;
     border-bottom: 1px solid $color-divide;
+
+    &__items {
+        display: flex;
+        justify-content: flex-start;
+        align-items: flex-end;
+        margin-left: -5px;
+        margin-right: -5px;
+    }
 
     &__item {
         width: 25%;

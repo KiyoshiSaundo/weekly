@@ -12,6 +12,7 @@ export default createStore({
             userId: localStorage.getItem('userId') || '',
             dateFrom: dateFrom,
             dateTo: dateTo,
+            isLoading: true,
         };
     },
     mutations: {
@@ -29,6 +30,10 @@ export default createStore({
             // console.log('dateChange');
             state.dateFrom = payload.dateFrom;
             state.dateTo = payload.dateTo;
-        }
-    }
+        },
+        loadingChange(state, payload) {
+            // console.log('loadingChange');
+            state.isLoading = payload.isLoading;
+        },
+    },
 });

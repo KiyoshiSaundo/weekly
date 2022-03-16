@@ -1,6 +1,6 @@
 <template>
     <div class="task">
-        {{ fields.name }} - {{ formatTime(fields.seconds) }}
+        {{ fields.id }} - {{ fields.name }} ({{ formatTime(fields.seconds) }})
     </div>
 </template>
 
@@ -11,8 +11,8 @@ export default {
     name: 'TaskItem',
     props: ['fields'],
     methods: {
-        formatTime
-    }
+        formatTime,
+    },
 };
 </script>
 
