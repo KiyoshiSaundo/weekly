@@ -106,6 +106,7 @@ export default {
                 !this.$store.state.dateFrom ||
                 !this.$store.state.dateTo
             ) {
+                this.setLoadingEnd();
                 return false;
             }
 
@@ -122,7 +123,7 @@ export default {
                 // данные по времени из промиса
                 .then((res) => {
                     if (res != undefined) {
-                        return res.data.result;
+                        return res.result;
                     }
                 })
                 // обрабатываем данные по времени
@@ -149,7 +150,7 @@ export default {
                 // данные по задачам из промиса
                 .then((res) => {
                     if (res != undefined) {
-                        return res.data.result.tasks;
+                        return res.result.tasks;
                     }
                 })
                 // обрабатываем данные по задачам
@@ -180,7 +181,7 @@ export default {
                 // данные по группам из промиса
                 .then((res) => {
                     if (res != undefined) {
-                        return res.data.result;
+                        return res.result;
                     }
                 })
                 // обрабатываем данные по группам
