@@ -139,6 +139,9 @@ export default {
                                 seconds: parseFloat(item.SECONDS),
                             };
                         });
+                        apiFilter.ID = apiFilter.ID.filter((value, index, self) => {
+                            return self.indexOf(value) === index;
+                        });
                         // промис задач
                         return getApiTasks(this.$store.state.apiUrl, apiFilter);
                     }
@@ -163,6 +166,9 @@ export default {
                                 groupId: item.groupId,
                                 seconds: 0,
                             };
+                        });
+                        apiFilter.ID = apiFilter.ID.filter((value, index, self) => {
+                            return self.indexOf(value) === index;
                         });
                         // промис групп
                         return getApiGroups(
@@ -211,8 +217,11 @@ export default {
 
                     // задачи
                     for (const [id, item] of Object.entries(allTasks)) {
-                        let grId = allResult[item.groupId].id || 0;
+                        let grId = allResult[item.groupId] ? allResult[item.groupId].id : 0;
                         allResult[grId].tasks[item.id] = item;
+
+                        // если к группе из задачи нет доступа - заменяем на 0
+                        allTasks[id].groupId = grId;
                     }
 
                     // время
