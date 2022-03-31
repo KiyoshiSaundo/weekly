@@ -114,8 +114,6 @@ export default {
                 USER_ID: this.$store.state.userId,
                 '>=CREATED_DATE': formatDate(this.$store.state.dateFrom),
                 '<=CREATED_DATE': formatDate(this.$store.state.dateTo),
-                // '>=CREATED_DATE': '18.03.2022',
-                // '<=CREATED_DATE': '18.03.2022',
             };
 
             // промис времени
@@ -150,7 +148,13 @@ export default {
                 // данные по задачам из промиса
                 .then((res) => {
                     if (res != undefined) {
-                        return res.result.tasks;
+                        let result = [];
+                        res.forEach((one) => {
+                            if (one != undefined) {
+                                result = result.concat(one.result.tasks);
+                            }
+                        });
+                        return result
                     }
                 })
                 // обрабатываем данные по задачам
