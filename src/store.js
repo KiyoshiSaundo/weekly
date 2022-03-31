@@ -5,6 +5,8 @@ const now = new Date();
 let dateFrom = new Date(now - (now.getDay() - 1) * 86400000);
 let dateTo = new Date(now - (now.getDay() - 1) * 86400000 + 6 * 86400000);
 
+// dateFrom = new Date(now - 3600 * 24 * 1000 * 60);
+
 export default createStore({
     state() {
         return {
