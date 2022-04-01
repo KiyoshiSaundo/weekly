@@ -222,20 +222,42 @@ export default {
 
                     // задачи
                     for (const [id, item] of Object.entries(allTasks)) {
+                        // если к группе из задачи нет доступа - заменяем на 0
                         let grId = allResult[item.groupId] ? allResult[item.groupId].id : 0;
                         allResult[grId].tasks[item.id] = item;
 
-                        // если к группе из задачи нет доступа - заменяем на 0
                         allTasks[id].groupId = grId;
                     }
 
                     // время
                     for (const [id, item] of Object.entries(allTimes)) {
-                        let grId = allTasks[item.taskId].groupId;
-                        let tsId = item.taskId;
+                        // если нет доступа к задаче или ее удалили,
+                        // но запись о времени осталась
+                        if (!allTasks[item.taskId]) {
+                            allTasks[item.taskId] = {
+                                id: item.taskId,
+                                name: 'Нет доступа к задаче или задача удалена',
+                                groupId: 0,
+                                seconds: 0,
+                            };
+                            allResult[0].tasks[item.taskId] = {
+                                id: item.taskId,
+                                name: 'Нет доступа к задаче или задача удалена',
+                                groupId: 0,
+                                seconds: 0,
+                            };
+                        }
 
-                        allResult[grId].seconds += item.seconds;
-                        allResult[grId].tasks[tsId].seconds += item.seconds;
+                        try {
+                            let grId = allTasks[item.taskId].groupId;
+                            let tsId = item.taskId;
+
+                            allResult[grId].seconds += item.seconds;
+                            allResult[grId].tasks[tsId].seconds += item.seconds;
+                        } catch (error) {
+                            alert(error);
+                            console.log(item);
+                        }
                     }
 
                     // удаляем пустую группу, если нет задач
