@@ -8,7 +8,6 @@
 import {formatTime} from '@/functions';
 
 export default {
-    name: 'TaskItem',
     props: ['fields'],
     methods: {
         formatTime,

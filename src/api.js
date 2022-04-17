@@ -13,7 +13,11 @@ export const getApiTimes = async (url, filter) => {
                 NAV_PARAMS: {nPageSize: 0},
             },
         }),
-    }).then((response) => response.json());
+    })
+        .then((response) => response.json())
+        .then((response) => {
+            return response.result;
+        });
 };
 
 // список задач по фильтру
@@ -27,7 +31,7 @@ export const getApiTasks = async (url, filter) => {
             body: JSON.stringify({
                 order: {ID: 'asc'},
                 filter: filter,
-                select: ['ID', 'TITLE', 'GROUP_ID', 'TIME_ESTIMATE'],
+                select: ['ID', 'TITLE', 'GROUP_ID'],
                 start: next,
             }),
         }).then((response) => response.json());
@@ -47,7 +51,11 @@ export const getApiTasks = async (url, filter) => {
         next += 50;
     }
 
-    return Promise.all(result);
+    return Promise.all(result).then((result) => {
+        return result.reduce((prev, curr) => {
+            return prev.concat(curr.result.tasks);
+        }, []);
+    });
 };
 
 // список групп по фильтру
@@ -61,5 +69,9 @@ export const getApiGroups = async (url, filter) => {
             ORDER: {ID: 'asc'},
             FILTER: filter,
         }),
-    }).then((response) => response.json());
+    })
+        .then((response) => response.json())
+        .then((response) => {
+            return response.result;
+        });
 };

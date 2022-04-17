@@ -4,12 +4,6 @@
     </header>
 </template>
 
-<script>
-export default {
-    name: 'Header',
-};
-</script>
-
 <style lang="scss">
 .header {
     padding-bottom: 20px;
