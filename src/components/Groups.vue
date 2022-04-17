@@ -1,39 +1,24 @@
 <template>
     <div class="groups">
-        <div class="groups__refresh" v-if="resultExist" @click="getData">
-            Обновить данные
-        </div>
-        <div class="groups__items" v-if="resultExist">
+        <div class="groups__refresh" @click="getResult">Обновить данные</div>
+        <div class="groups__items" v-if="result.length">
             <div class="groups__item" v-for="group in result" :key="group.id">
                 <label class="groups__label">
-                    <input
-                        class="groups__checkbox"
-                        type="checkbox"
-                        value="group.id"
-                        v-model="group.selected"
-                    />
+                    <input class="groups__checkbox" type="checkbox" value="group.id" v-model="group.selected" />
                     <b>{{ group.name }}</b> ({{ formatTime(group.seconds) }})
                 </label>
                 <div class="groups__tasks">
-                    <div
-                        class="groups__task"
-                        v-for="task in group.tasks"
-                        :key="task.id"
-                    >
+                    <div class="groups__task" v-for="task in group.tasks" :key="task.id">
                         <TaskItem :fields="task" />
                     </div>
                 </div>
             </div>
         </div>
-        <div class="groups__footer" v-if="resultExist">
-            <div class="groups__checked">
-                Сумма выбранных: {{ formatTime(checkedSumm) }}
-            </div>
-            <div class="groups__total">
-                Всего затрачено: {{ formatTime(totalSumm) }}
-            </div>
+        <div class="groups__footer" v-if="result.length">
+            <div class="groups__checked">Сумма выбранных: {{ formatTime(summChecked) }}</div>
+            <div class="groups__total">Всего затрачено: {{ formatTime(summTotal) }}</div>
         </div>
-        <div class="groups__empty" v-if="!resultExist">Данных нет</div>
+        <div class="groups__empty" v-if="!result.length">Данных нет</div>
     </div>
 </template>
 
@@ -43,15 +28,12 @@ import {getApiTimes, getApiTasks, getApiGroups} from '@/api';
 import TaskItem from '@/components/TaskItem.vue';
 
 export default {
-    name: 'Tasks',
     components: {
         TaskItem,
     },
     data() {
         return {
-            result: {},
-            resultExist: false,
-            isLoading: true,
+            result: [],
         };
     },
     computed: {
@@ -63,213 +45,127 @@ export default {
                 dateTo: this.$store.state.dateTo,
             };
         },
-        checkedSumm() {
-            let r = 0;
-            for (const [id, item] of Object.entries(this.result)) {
-                if (item.selected === true) r += item.seconds;
-            }
-            return r;
+        summChecked() {
+            return this.result.reduce((prev, curr) => {
+                return (prev += curr.selected ? curr.seconds : 0);
+            }, 0);
         },
-        totalSumm() {
-            let r = 0;
-            for (const [id, item] of Object.entries(this.result)) {
-                r += item.seconds;
-            }
-            return r;
-        },
-    },
-    watch: {
-        settings: {
-            handler() {
-                this.getData();
-            },
-            deep: true,
+        summTotal() {
+            return this.result.reduce((prev, curr) => {
+                return (prev += curr.seconds);
+            }, 0);
         },
     },
     created() {
-        this.getData();
+        this.getResult();
+    },
+    watch: {
+        settings() {
+            this.getResult();
+        },
+        result() {
+            this.setLoadingEnd();
+        },
     },
     methods: {
         formatDate,
         formatTime,
 
-        getData() {
+        async getResult() {
             this.setLoadingStart();
 
-            let allResult = {},
-                allTimes = {},
-                allTasks = {},
-                allGroups = {};
+            const [itemsTime, itemsTask, itemsGroup] = await this.getResultData();
 
-            if (
-                !this.$store.state.userId ||
-                !this.$store.state.dateFrom ||
-                !this.$store.state.dateTo
-            ) {
-                this.setLoadingEnd();
-                return false;
-            }
-
-            let apiFilter = {
-                USER_ID: this.$store.state.userId,
-                '>=CREATED_DATE': formatDate(this.$store.state.dateFrom),
-                '<=CREATED_DATE': formatDate(this.$store.state.dateTo),
+            let result = {
+                0: {
+                    id: 0,
+                    name: 'Нет доступа к группе',
+                    seconds: 0,
+                    selected: this.result[0] ? this.result[0].selected : false,
+                    tasks: {
+                        0: {
+                            id: 0,
+                            name: 'Нет доступа к задаче или задача удалена',
+                            seconds: 0,
+                        },
+                    },
+                },
             };
 
-            // промис времени
-            getApiTimes(this.$store.state.apiUrl, apiFilter)
-                // данные по времени из промиса
-                .then((res) => {
-                    if (res != undefined) {
-                        return res.result;
-                    }
-                })
-                // обрабатываем данные по времени
-                .then((times) => {
-                    if (times != undefined && times.length) {
-                        let apiFilter = {
-                            ID: [],
-                        };
-                        times.forEach((item) => {
-                            apiFilter.ID[apiFilter.ID.length] = item.TASK_ID;
-                            allTimes[item.ID] = {
-                                id: item.ID,
-                                taskId: item.TASK_ID,
-                                seconds: parseFloat(item.SECONDS),
-                            };
-                        });
-                        apiFilter.ID = apiFilter.ID.filter((value, index, self) => {
-                            return self.indexOf(value) === index;
-                        });
-                        // промис задач
-                        return getApiTasks(this.$store.state.apiUrl, apiFilter);
-                    }
-                })
-                // данные по задачам из промиса
-                .then((res) => {
-                    if (res != undefined) {
-                        let result = [];
-                        res.forEach((one) => {
-                            if (one != undefined) {
-                                result = result.concat(one.result.tasks);
-                            }
-                        });
-                        return result
-                    }
-                })
-                // обрабатываем данные по задачам
-                .then((tasks) => {
-                    if (tasks != undefined && tasks.length) {
-                        let apiFilter = {
-                            ID: [],
-                        };
-                        tasks.forEach((item) => {
-                            apiFilter.ID[apiFilter.ID.length] = item.groupId;
-                            allTasks[item.id] = {
-                                id: item.id,
-                                name: item.title,
-                                groupId: item.groupId,
-                                seconds: 0,
-                            };
-                        });
-                        apiFilter.ID = apiFilter.ID.filter((value, index, self) => {
-                            return self.indexOf(value) === index;
-                        });
-                        // промис групп
-                        return getApiGroups(
-                            this.$store.state.apiUrl,
-                            apiFilter
-                        );
-                    }
-                })
-                // данные по группам из промиса
-                .then((res) => {
-                    if (res != undefined) {
-                        return res.result;
-                    }
-                })
-                // обрабатываем данные по группам
-                .then((groups) => {
-                    if (groups != undefined && groups.length) {
-                        groups.forEach((item) => {
-                            allGroups[item.ID] = {
-                                id: item.ID,
-                                name: item.NAME,
-                                tasks: {},
-                                seconds: 0,
-                                selected: this.result[item.ID]
-                                    ? this.result[item.ID].selected
-                                    : false,
-                            };
-                        });
-                    }
-                })
-                // собираем все вместе
-                .then((res) => {
-                    // группы
-                    allResult[0] = {
-                        id: 0,
-                        name: 'Нет доступа к группе',
-                        tasks: {},
-                        seconds: 0,
-                        selected: this.result[0]
-                            ? this.result[0].selected
-                            : false,
-                    };
-                    for (const [id, item] of Object.entries(allGroups)) {
-                        allResult[item.id] = item;
-                    }
+            // группы
+            itemsGroup.forEach((group) => {
+                result[group.ID] = {
+                    id: group.ID,
+                    name: group.NAME,
+                    seconds: 0,
+                    selected: this.result[group.ID] ? this.result[group.ID].selected : false,
+                    tasks: {},
+                };
+            });
 
-                    // задачи
-                    for (const [id, item] of Object.entries(allTasks)) {
-                        // если к группе из задачи нет доступа - заменяем на 0
-                        let grId = allResult[item.groupId] ? allResult[item.groupId].id : 0;
-                        allResult[grId].tasks[item.id] = item;
+            // задачи
+            let task2group = {0: 0}; // задача => группа
+            itemsTask.forEach((task) => {
+                let grId = result[task.groupId].id || 0;
+                task2group[task.id] = grId;
+                result[grId].tasks[task.id] = {
+                    id: task.id,
+                    name: task.title,
+                    seconds: 0,
+                };
+            });
 
-                        allTasks[id].groupId = grId;
-                    }
+            // время
+            itemsTime.forEach((time) => {
+                let gr = result[task2group[time.TASK_ID]],
+                    grId = gr ? gr.id : 0,
+                    ts = result[grId].tasks[time.TASK_ID],
+                    tsId = ts ? ts.id : 0;
 
-                    // время
-                    for (const [id, item] of Object.entries(allTimes)) {
-                        // если нет доступа к задаче или ее удалили,
-                        // но запись о времени осталась
-                        if (!allTasks[item.taskId]) {
-                            allTasks[item.taskId] = {
-                                id: item.taskId,
-                                name: 'Нет доступа к задаче или задача удалена',
-                                groupId: 0,
-                                seconds: 0,
-                            };
-                            allResult[0].tasks[item.taskId] = {
-                                id: item.taskId,
-                                name: 'Нет доступа к задаче или задача удалена',
-                                groupId: 0,
-                                seconds: 0,
-                            };
-                        }
+                result[grId].seconds += parseInt(time.SECONDS);
+                result[grId].tasks[tsId].seconds += parseInt(time.SECONDS);
+            });
 
-                        try {
-                            let grId = allTasks[item.taskId].groupId;
-                            let tsId = item.taskId;
-
-                            allResult[grId].seconds += item.seconds;
-                            allResult[grId].tasks[tsId].seconds += item.seconds;
-                        } catch (error) {
-                            alert(error);
-                            console.log(item);
-                        }
-                    }
-
-                    // удаляем пустую группу, если нет задач
-                    if (Object.keys(allResult[0].tasks).length == 0) {
-                        delete allResult[0];
-                    }
-
-                    this.result = allResult;
-                    this.resultExist = Object.keys(allResult).length;
-
-                    this.setLoadingEnd();
+            // итог
+            this.result = Object.values(result).filter((group) => {
+                group.tasks = Object.values(group.tasks).filter((task) => {
+                    return task.seconds;
                 });
+                return group.seconds;
+            });
+        },
+        async getResultData() {
+            // записи о потраченном времени
+            let filter = {
+                USER_ID: this.$store.state.userId,
+                '>=CREATED_DATE': formatDate(this.$store.state.dateFrom) + ' 00:00:00',
+                '<=CREATED_DATE': formatDate(this.$store.state.dateTo) + ' 23:59:59',
+            };
+            let itemsTime = await getApiTimes(this.$store.state.apiUrl, filter);
+
+            // записи о задачах
+            let itemsTask = [];
+            filter = {
+                ID: itemsTime.map((item) => {
+                    return item.TASK_ID;
+                }),
+            };
+            if (filter.ID.length) {
+                itemsTask = await getApiTasks(this.$store.state.apiUrl, filter);
+            }
+
+            // информация по группам
+            let itemsGroup = [];
+            filter = {
+                ID: itemsTask.map((item) => {
+                    return item.groupId;
+                }),
+            };
+            if (filter.ID.length) {
+                itemsGroup = await getApiGroups(this.$store.state.apiUrl, filter);
+            }
+
+            return [itemsTime, itemsTask, itemsGroup];
         },
 
         setLoadingStart() {
