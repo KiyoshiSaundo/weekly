@@ -10,7 +10,7 @@ export const formatDate = (date) => {
     y = date.getFullYear();
 
     return d + '.' + m + '.' + y;
-}
+};
 
 export const formatTime = (seconds) => {
     let h, m, s;
@@ -19,9 +19,29 @@ export const formatTime = (seconds) => {
     m = Math.floor(seconds / 60) - h * 60;
     s = seconds % 60;
 
-    return [
-        h.toString().padStart(2, '0'),
-        m.toString().padStart(2, '0'),
-        s.toString().padStart(2, '0'),
-    ].join(':');
-}
+    return [h.toString().padStart(2, '0'), m.toString().padStart(2, '0'), s.toString().padStart(2, '0')].join(':');
+};
+
+export const getCurrDay = () => {
+    const now = new Date();
+
+    return [now, now];
+};
+
+export const getCurrWeek = () => {
+    const now = new Date();
+
+    let dateFrom = new Date(now - (now.getDay() - 1) * 86400000);
+    let dateTo = new Date(now - (now.getDay() - 1) * 86400000 + 6 * 86400000);
+
+    return [dateFrom, dateTo];
+};
+
+export const getCurrMonth = () => {
+    const now = new Date();
+
+    let dateFrom = new Date(now.getFullYear(), now.getMonth(), 1);
+    let dateTo = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+    return [dateFrom, dateTo];
+};
