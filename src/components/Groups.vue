@@ -106,7 +106,8 @@ export default {
             // задачи
             let task2group = {0: 0}; // задача => группа
             itemsTask.forEach((task) => {
-                let grId = result[task.groupId].id || 0;
+                let gr = result[task.groupId],
+                    grId = gr ? gr.id : 0;
                 task2group[task.id] = grId;
                 result[grId].tasks[task.id] = {
                     id: task.id,
@@ -136,12 +137,15 @@ export default {
         },
         async getResultData() {
             // записи о потраченном времени
+            let itemsTime = [];
             let filter = {
                 USER_ID: this.$store.state.userId,
                 '>=CREATED_DATE': formatDate(this.$store.state.dateFrom) + ' 00:00:00',
                 '<=CREATED_DATE': formatDate(this.$store.state.dateTo) + ' 23:59:59',
             };
-            let itemsTime = await getApiTimes(this.$store.state.apiUrl, filter);
+            if (filter.USER_ID) {
+                itemsTime = await getApiTimes(this.$store.state.apiUrl, filter);
+            }
 
             // записи о задачах
             let itemsTask = [];
