@@ -1,9 +1,7 @@
 import {createStore} from 'vuex';
+import {getCurrWeek} from '@/functions';
 
-const now = new Date();
-
-let dateFrom = new Date(now - (now.getDay() - 1) * 86400000);
-let dateTo = new Date(now - (now.getDay() - 1) * 86400000 + 6 * 86400000);
+const [dateFrom, dateTo] = getCurrWeek();
 
 export default createStore({
     state() {

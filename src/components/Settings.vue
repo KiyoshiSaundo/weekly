@@ -24,6 +24,8 @@
 import AirDatepicker from 'air-datepicker';
 import 'air-datepicker/air-datepicker.css';
 
+import {getCurrDay, getCurrWeek, getCurrMonth} from '@/functions';
+
 export default {
     data() {
         return {
@@ -35,10 +37,37 @@ export default {
         };
     },
     mounted() {
+        let btnDay = {
+                content: 'День',
+                onClick: (dp) => {
+                    let dates = getCurrDay();
+                    dp.selectDate(dates);
+                    dp.setViewDate(dates[0]);
+                },
+            },
+            btnWeek = {
+                content: 'Неделя',
+                onClick: (dp) => {
+                    let dates = getCurrWeek();
+                    dp.selectDate(dates);
+                    dp.setViewDate(dates[0]);
+                },
+            },
+            btnMonth = {
+                content: 'Месяц',
+                onClick: (dp) => {
+                    let dates = getCurrMonth();
+                    dp.selectDate(dates);
+                    dp.setViewDate(dates[0]);
+                },
+            };
+
         this.datePickerInst = new AirDatepicker('[name=dates]', {
             range: true,
             multipleDatesSeparator: ' - ',
             selectedDates: [this.start, this.end],
+            buttons: [btnDay, btnWeek, btnMonth],
+            toggleSelected: false,
             onSelect(fields) {
                 if (fields.date.length == 2) {
                     fields.datepicker.hide();
@@ -49,17 +78,17 @@ export default {
     methods: {
         setSettings() {
             this.$store.commit('apiChange', {
-                apiUrl: this.apiUrl
+                apiUrl: this.apiUrl,
             });
             this.$store.commit('userChange', {
-                userId: this.userId
+                userId: this.userId,
             });
             this.$store.commit('dateChange', {
                 dateFrom: this.datePickerInst.selectedDates[0],
-                dateTo: this.datePickerInst.selectedDates[1],
+                dateTo: this.datePickerInst.selectedDates[1] || this.datePickerInst.selectedDates[0],
             });
-        }
-    }
+        },
+    },
 };
 </script>
 
