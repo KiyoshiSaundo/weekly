@@ -4,13 +4,22 @@
 }
 
 html, body {
-    min-width: 320px;
-    color: $color;
     font-family: 'Roboto', sans-serif;
     font-weight: 300;
     line-height: 1.5;
+    min-width: 320px;
+    color: $color;
 }
 
 b {
     font-weight: 500;
+}
+
+option {
+    font-weight: 300;
+
+    &[selected],
+    &:checked {
+        font-weight: 500;
+    }
 }

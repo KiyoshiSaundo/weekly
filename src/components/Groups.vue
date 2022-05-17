@@ -72,6 +72,8 @@ export default {
         formatTime,
 
         async getResult() {
+            if (!this.settings.apiUrl || !this.settings.userId) return false;
+
             this.setLoadingStart();
 
             const [itemsTime, itemsTask, itemsGroup] = await this.getResultData();

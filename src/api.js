@@ -1,3 +1,33 @@
+// все записи из постранички
+const getAll = async (url, body) => {
+    const get = (url, body, next) => {
+        body.start = next;
+        return fetch(url, {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body),
+        }).then((response) => response.json());
+    };
+
+    let result = [];
+    let next = 0;
+    let total = null;
+
+    while (total === null || next < total) {
+        let response = get(url, body, next);
+        if (total === null) {
+            let res = await response;
+            total = parseInt(res.total);
+        }
+        result.push(response);
+        next += 50;
+    }
+
+    return Promise.all(result);
+};
+
 // затраченное время по фильтру
 export const getApiTimes = async (url, filter) => {
     return fetch(url + '/task.elapseditem.getlist', {
@@ -22,36 +52,11 @@ export const getApiTimes = async (url, filter) => {
 
 // список задач по фильтру
 export const getApiTasks = async (url, filter) => {
-    const get = (url, filter, next) => {
-        return fetch(url + '/tasks.task.list', {
-            method: 'post',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                order: {ID: 'asc'},
-                filter: filter,
-                select: ['ID', 'TITLE', 'GROUP_ID'],
-                start: next,
-            }),
-        }).then((response) => response.json());
-    };
-
-    let result = [];
-    let next = 0;
-    let total = null;
-
-    while (total === null || next < total) {
-        let response = get(url, filter, next);
-        if (total === null) {
-            let res = await response;
-            total = parseInt(res.total);
-        }
-        result.push(response);
-        next += 50;
-    }
-
-    return Promise.all(result).then((result) => {
+    return getAll(url + '/tasks.task.list', {
+        order: {ID: 'asc'},
+        filter: filter,
+        select: ['ID', 'TITLE', 'GROUP_ID'],
+    }).then((result) => {
         return result.reduce((prev, curr) => {
             return prev.concat(curr.result.tasks);
         }, []);
@@ -74,4 +79,36 @@ export const getApiGroups = async (url, filter) => {
         .then((response) => {
             return response.result;
         });
+};
+
+// админ текущий пользователь или нет
+export const getApiIsAdmin = async (url) => {
+    return fetch(url + '/user.admin.json', {
+        method: 'post',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+        .then((response) => response.json())
+        .then((response) => {
+            return response.result;
+        })
+        .catch((err) => {
+            return false;
+        });
+};
+
+// список пользователей
+export const getApiUsers = async (url) => {
+    return getAll(url + '/user.get', {
+        sort: 'LAST_NAME',
+        order: 'asc',
+        filter: {
+            ACTIVE: 'true',
+        },
+    }).then((result) => {
+        return result.reduce((prev, curr) => {
+            return prev.concat(curr.result);
+        }, []);
+    });
 };
