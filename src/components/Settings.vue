@@ -1,13 +1,17 @@
 <template>
     <div class="settings">
         <div class="settings__items">
-            <div class="settings__item">
+            <div class="settings__item" :class="{'settings__item--2': !isAdmin}">
                 <label class="settings__label">Строка API</label>
                 <input class="settings__input" type="text" v-model="apiUrl" />
             </div>
-            <div class="settings__item">
-                <label class="settings__label">ID пользователя</label>
-                <input class="settings__input" type="text" v-model="userId" />
+            <div class="settings__item" v-if="isAdmin">
+                <label class="settings__label">Пользователь</label>
+                <select class="settings__input" v-model="userId">
+                    <option v-for="user in users" :key="user.ID" :value="user.ID">
+                        {{ user.LAST_NAME }} {{ user.NAME }} ({{ user.ID }})
+                    </option>
+                </select>
             </div>
             <div class="settings__item">
                 <label class="settings__label">Период</label>
@@ -25,6 +29,7 @@ import AirDatepicker from 'air-datepicker';
 import 'air-datepicker/air-datepicker.css';
 
 import {getCurrDay, getCurrWeek, getCurrMonth} from '@/functions';
+import {getApiIsAdmin, getApiUsers} from '@/api';
 
 export default {
     data() {
@@ -34,7 +39,12 @@ export default {
             start: this.$store.state.dateFrom,
             end: this.$store.state.dateTo,
             datePickerInst: false,
+            users: [],
+            isAdmin: false,
         };
+    },
+    created() {
+        this.getUsers();
     },
     mounted() {
         let btnDay = {
@@ -75,7 +85,27 @@ export default {
             },
         });
     },
+    watch: {
+        apiUrl() {
+            this.setUserId();
+            this.getUsers();
+        },
+        users() {
+            this.setLoadingEnd();
+        }
+    },
     methods: {
+        async getUsers() {
+            if (this.apiUrl) {
+                this.setLoadingStart();
+                this.isAdmin = await getApiIsAdmin(this.apiUrl);
+                if (this.isAdmin) {
+                    this.users = await getApiUsers(this.apiUrl);
+                } else {
+                    this.users = [];
+                }
+            }
+        },
         setSettings() {
             this.$store.commit('apiChange', {
                 apiUrl: this.apiUrl,
@@ -86,6 +116,27 @@ export default {
             this.$store.commit('dateChange', {
                 dateFrom: this.datePickerInst.selectedDates[0],
                 dateTo: this.datePickerInst.selectedDates[1] || this.datePickerInst.selectedDates[0],
+            });
+        },
+        setUserId() {
+            if (this.apiUrl) {
+                let match = false;
+                if (match = this.apiUrl.match(/rest\/(\d+)/)) {
+                    this.userId = match[1] || false;
+                }
+            } else {
+                this.userId = false;
+            }
+        },
+
+        setLoadingStart() {
+            this.$store.commit('loadingChange', {
+                isLoading: true,
+            });
+        },
+        setLoadingEnd() {
+            this.$store.commit('loadingChange', {
+                isLoading: false,
             });
         },
     },
@@ -110,6 +161,10 @@ export default {
         width: 25%;
         padding-left: 5px;
         padding-right: 5px;
+
+        &--2 {
+            width: 50%;
+        }
     }
 
     &__label {
