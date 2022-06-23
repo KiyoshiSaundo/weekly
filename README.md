@@ -1,6 +1,13 @@
-# weekly
+# weekly - "Неделька"
 
-This template should help get you started developing with Vue 3 in Vite.
+## История
+
+### 2.0.0 - 23.06.2022
+
+- Добавлен отчет с выработкой за год
+
+---
+---
 
 ## Recommended IDE Setup
 

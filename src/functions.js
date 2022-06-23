@@ -45,3 +45,11 @@ export const getCurrMonth = () => {
 
     return [dateFrom, dateTo];
 };
+
+export const getCurrYear = () => {
+    const now = new Date();
+
+    let date = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    return date;
+};

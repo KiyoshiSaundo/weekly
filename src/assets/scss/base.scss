@@ -1,14 +1,21 @@
-*, *::before, *::after {
+*,
+*::before,
+*::after {
     box-sizing: border-box;
     outline: 0;
 }
 
-html, body {
+html,
+body {
     font-family: 'Roboto', sans-serif;
     font-weight: 300;
     line-height: 1.5;
     min-width: 320px;
     color: $color;
+}
+
+body {
+    overflow-y: scroll;
 }
 
 b {
@@ -22,4 +29,16 @@ option {
     &:checked {
         font-weight: 500;
     }
+}
+
+[type='text'],
+select,
+[type='number'] {
+    font-weight: 300;
+    line-height: 30px;
+    width: 100%;
+    height: 30px;
+    padding: 0 10px;
+    border: 1px solid $color-divide;
+    appearance: none;
 }
