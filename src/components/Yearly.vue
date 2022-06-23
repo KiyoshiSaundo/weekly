@@ -23,6 +23,7 @@
                         type="number"
                         v-model="item.days"
                         :title="'По умолчанию: ' + item.workDays"
+                        step="0.5"
                         @keyup="daysChange(item.k, item.days)"
                         @change="daysChange(item.k, item.days)"
                     />
@@ -155,7 +156,7 @@ export default {
                 user = this.settings.userId,
                 year = this.settings.date.getFullYear();
 
-            value = parseInt(value);
+            value = parseFloat(String(value).replace(',', '.'));
 
             if (storeDays[user]?.[year]?.[month] == value) return;
 
@@ -179,7 +180,7 @@ export default {
             this.result = this.result.map((item) => {
                 if (item.seconds && item.days) {
                     item.result = parseFloat(item.seconds) / 60 / 60 / parseFloat(String(item.days).replace(',', '.'));
-                    item.result = (Math.ceil(item.result * 10) / 10).toFixed(1);
+                    item.result = (Math.ceil(item.result * 100) / 100).toFixed(1);
                 }
                 return item;
             });
@@ -244,7 +245,7 @@ export default {
 
             &.is-days {
                 input {
-                    width: 70px;
+                    width: 75px;
                     text-align: right;
 
                     &.is-custom {
@@ -255,7 +256,7 @@ export default {
 
             &.is-total-days {
                 input {
-                    width: 70px;
+                    width: 75px;
                     text-align: right;
                     background: transparent;
                     border-color: transparent;
