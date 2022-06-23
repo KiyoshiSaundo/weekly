@@ -1,15 +1,13 @@
 <template>
-    <div class="weekly" :class="{'is-loading': this.$store.state.isLoading}">
+    <div class="reports">
         <Header />
-        <Settings />
-        <Groups />
+        <Tabs />
     </div>
 </template>
 
 <script>
 import Header from '@/components/Header.vue';
-import Settings from '@/components/Settings.vue';
-import Groups from '@/components/Groups.vue';
+import Tabs from '@/components/Tabs.vue';
 
 import 'normalize.css';
 
@@ -17,24 +15,18 @@ export default {
     name: 'App',
     components: {
         Header,
-        Settings,
-        Groups,
+        Tabs,
     },
 };
 </script>
 
 <style lang="scss">
-.weekly {
+.reports {
     width: 100%;
     max-width: 900px;
-    margin: 20px auto;
+    margin: $padding-base auto;
     border: 1px solid $color-divide;
-    padding: 20px;
+    padding: $padding-base;
     position: relative;
-
-    &.is-loading {
-        pointer-events: none;
-        opacity: 0.5;
-    }
 }
 </style>

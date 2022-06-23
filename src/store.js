@@ -1,37 +1,60 @@
 import {createStore} from 'vuex';
-import {getCurrWeek} from '@/functions';
+import {getCurrWeek, getCurrYear} from '@/functions';
 
-const [dateFrom, dateTo] = getCurrWeek();
+const [weeklyDateFrom, weeklyDateTo] = getCurrWeek();
+
+const yearlyDate = getCurrYear();
 
 export default createStore({
     state() {
         return {
-            apiUrl: localStorage.getItem('apiUrl') || '',
-            userId: localStorage.getItem('userId') || '',
-            dateFrom: dateFrom,
-            dateTo: dateTo,
-            isLoading: false,
+            weeklyApiUrl: localStorage.getItem('weeklyApiUrl') || '',
+            weeklyUserId: localStorage.getItem('weeklyUserId') || '',
+            weeklyDateFrom: weeklyDateFrom,
+            weeklyDateTo: weeklyDateTo,
+
+            yearlyApiUrl: localStorage.getItem('yearlyApiUrl') || '',
+            yearlyUserId: localStorage.getItem('yearlyUserId') || '',
+            yearlyDate: yearlyDate,
+            yearlyDays: JSON.parse(localStorage.getItem('yearlyDays')) || {},
         };
     },
     mutations: {
-        apiChange(state, payload) {
-            // console.log('apiChange');
-            state.apiUrl = payload.apiUrl;
-            localStorage.setItem('apiUrl', payload.apiUrl);
+        weeklyApiChange(state, payload) {
+            // console.log('weeklyApiChange');
+            state.weeklyApiUrl = payload.weeklyApiUrl;
+            localStorage.setItem('weeklyApiUrl', payload.weeklyApiUrl);
         },
-        userChange(state, payload) {
-            // console.log('userChange');
-            state.userId = payload.userId;
-            localStorage.setItem('userId', payload.userId);
+        weeklyUserChange(state, payload) {
+            // console.log('weeklyUserChange');
+            state.weeklyUserId = payload.weeklyUserId;
+            localStorage.setItem('weeklyUserId', payload.weeklyUserId);
         },
-        dateChange(state, payload) {
-            // console.log('dateChange');
-            state.dateFrom = payload.dateFrom;
-            state.dateTo = payload.dateTo;
+        weeklyDateChange(state, payload) {
+            // console.log('weeklyDateChange');
+            state.weeklyDateFrom = payload.weeklyDateFrom;
+            state.weeklyDateTo = payload.weeklyDateTo;
         },
-        loadingChange(state, payload) {
-            // console.log('loadingChange');
-            state.isLoading = payload.isLoading;
+
+        yearlyApiChange(state, payload) {
+            // console.log('yearlyApiChange');
+            state.yearlyApiUrl = payload.yearlyApiUrl;
+            localStorage.setItem('yearlyApiUrl', payload.yearlyApiUrl);
+        },
+        yearlyUserChange(state, payload) {
+            // console.log('yearlyUserChange');
+            state.yearlyUserId = payload.yearlyUserId;
+            localStorage.setItem('yearlyUserId', payload.yearlyUserId);
+        },
+        yearlyDateChange(state, payload) {
+            // console.log('yearlyDateChange');
+            state.yearlyDate = payload.yearlyDate;
+            localStorage.setItem('yearlyDate', payload.yearlyDate);
+        },
+        yearlyDaysChange(state, payload) {
+            // console.log('yearlyDaysChange');
+            state.yearlyDays = payload.yearlyDays;
+            localStorage.setItem('yearlyDays', JSON.stringify(payload.yearlyDays));
         },
     },
 });

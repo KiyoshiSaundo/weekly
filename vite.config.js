@@ -21,6 +21,7 @@ export default defineConfig({
                 additionalData: `
                     @import "@/assets/scss/_vars.scss";
                     @import "@/assets/scss/base.scss";
+                    @import "@/assets/scss/common.scss";
                 `,
             },
         },

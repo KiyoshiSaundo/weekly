@@ -38,7 +38,7 @@ export const getApiTimes = async (url, filter) => {
         body: JSON.stringify({
             order: {ID: 'asc'},
             filter: filter,
-            select: ['ID', 'TASK_ID', 'SECONDS'],
+            select: ['ID', 'TASK_ID', 'SECONDS', 'CREATED_DATE'],
             params: {
                 NAV_PARAMS: {nPageSize: 0},
             },
@@ -111,4 +111,13 @@ export const getApiUsers = async (url) => {
             return prev.concat(curr.result);
         }, []);
     });
+};
+
+// https://isdayoff.ru/api/getdata?year=2022&month=01&delimeter=|&covid=1
+export const isMonthOff = async (year, month) => {
+    return fetch('https://isdayoff.ru/api/getdata?year=' + year + '&month=' + month + '&delimeter=|&covid=1').then(
+        (response) => {
+            return response.text();
+        }
+    );
 };

@@ -1,48 +1,51 @@
 <template>
-    <div class="groups">
-        <div class="groups__refresh" @click="getResult">Обновить данные</div>
-        <div class="groups__items" v-if="result.length">
-            <div class="groups__item" v-for="group in result" :key="group.id">
-                <label class="groups__label">
-                    <input class="groups__checkbox" type="checkbox" value="group.id" v-model="group.selected" />
+    <div class="weekly" :class="{'is-loading': isLoading}">
+        <div class="weekly__refresh" @click="getResult" title="Обновить данные">
+            <svg fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30">
+                <path
+                    d="M 15 3 C 12.031398 3 9.3028202 4.0834384 7.2070312 5.875 A 1.0001 1.0001 0 1 0 8.5058594 7.3945312 C 10.25407 5.9000929 12.516602 5 15 5 C 20.19656 5 24.450989 8.9379267 24.951172 14 L 22 14 L 26 20 L 30 14 L 26.949219 14 C 26.437925 7.8516588 21.277839 3 15 3 z M 4 10 L 0 16 L 3.0507812 16 C 3.562075 22.148341 8.7221607 27 15 27 C 17.968602 27 20.69718 25.916562 22.792969 24.125 A 1.0001 1.0001 0 1 0 21.494141 22.605469 C 19.74593 24.099907 17.483398 25 15 25 C 9.80344 25 5.5490109 21.062074 5.0488281 16 L 8 16 L 4 10 z"
+                />
+            </svg>
+        </div>
+        <div class="weekly__items" v-if="result.length">
+            <div class="weekly__item" v-for="group in result" :key="group.id">
+                <label class="weekly__label">
+                    <input class="weekly__checkbox" type="checkbox" value="group.id" v-model="group.selected" />
                     <b>{{ group.name }}</b> ({{ formatTime(group.seconds) }})
                 </label>
-                <div class="groups__tasks">
-                    <div class="groups__task" v-for="task in group.tasks" :key="task.id">
-                        <TaskItem :fields="task" />
+                <div class="weekly__tasks">
+                    <div class="weekly__task" v-for="task in group.tasks" :key="task.id">
+                        {{ task.id }} - {{ task.name }} ({{ formatTime(task.seconds) }})
                     </div>
                 </div>
             </div>
         </div>
-        <div class="groups__footer" v-if="result.length">
-            <div class="groups__checked">Сумма выбранных: {{ formatTime(summChecked) }}</div>
-            <div class="groups__total">Всего затрачено: {{ formatTime(summTotal) }}</div>
+        <div class="weekly__footer" v-if="result.length">
+            <div class="weekly__checked">Сумма выбранных: {{ formatTime(summChecked) }}</div>
+            <div class="weekly__total">Всего затрачено: {{ formatTime(summTotal) }}</div>
         </div>
-        <div class="groups__empty" v-if="!result.length">Данных нет</div>
+        <div class="weekly__empty" v-if="!result.length">Данных нет</div>
     </div>
 </template>
 
 <script>
 import {formatDate, formatTime} from '@/functions';
 import {getApiTimes, getApiTasks, getApiGroups} from '@/api';
-import TaskItem from '@/components/TaskItem.vue';
 
 export default {
-    components: {
-        TaskItem,
-    },
     data() {
         return {
             result: [],
+            isLoading: false,
         };
     },
     computed: {
         settings() {
             return {
-                apiUrl: this.$store.state.apiUrl,
-                userId: this.$store.state.userId,
-                dateFrom: this.$store.state.dateFrom,
-                dateTo: this.$store.state.dateTo,
+                apiUrl: this.$store.state.weeklyApiUrl,
+                userId: this.$store.state.weeklyUserId,
+                dateFrom: this.$store.state.weeklyDateFrom,
+                dateTo: this.$store.state.weeklyDateTo,
             };
         },
         summChecked() {
@@ -64,7 +67,7 @@ export default {
             this.getResult();
         },
         result() {
-            this.setLoadingEnd();
+            this.isLoading = false;
         },
     },
     methods: {
@@ -74,7 +77,7 @@ export default {
         async getResult() {
             if (!this.settings.apiUrl || !this.settings.userId) return false;
 
-            this.setLoadingStart();
+            this.isLoading = true;
 
             const [itemsTime, itemsTask, itemsGroup] = await this.getResultData();
 
@@ -141,12 +144,12 @@ export default {
             // записи о потраченном времени
             let itemsTime = [];
             let filter = {
-                USER_ID: this.$store.state.userId,
-                '>=CREATED_DATE': formatDate(this.$store.state.dateFrom) + ' 00:00:00',
-                '<=CREATED_DATE': formatDate(this.$store.state.dateTo) + ' 23:59:59',
+                USER_ID: this.settings.userId,
+                '>=CREATED_DATE': formatDate(this.settings.dateFrom) + ' 00:00:00',
+                '<=CREATED_DATE': formatDate(this.settings.dateTo) + ' 23:59:59',
             };
             if (filter.USER_ID) {
-                itemsTime = await getApiTimes(this.$store.state.apiUrl, filter);
+                itemsTime = await getApiTimes(this.settings.apiUrl, filter);
             }
 
             // записи о задачах
@@ -157,7 +160,7 @@ export default {
                 }),
             };
             if (filter.ID.length) {
-                itemsTask = await getApiTasks(this.$store.state.apiUrl, filter);
+                itemsTask = await getApiTasks(this.settings.apiUrl, filter);
             }
 
             // информация по группам
@@ -168,45 +171,33 @@ export default {
                 }),
             };
             if (filter.ID.length) {
-                itemsGroup = await getApiGroups(this.$store.state.apiUrl, filter);
+                itemsGroup = await getApiGroups(this.settings.apiUrl, filter);
             }
 
             return [itemsTime, itemsTask, itemsGroup];
-        },
-
-        setLoadingStart() {
-            this.$store.commit('loadingChange', {
-                isLoading: true,
-            });
-        },
-        setLoadingEnd() {
-            this.$store.commit('loadingChange', {
-                isLoading: false,
-            });
         },
     },
 };
 </script>
 
 <style lang="scss">
-.groups {
+.weekly {
     position: relative;
 
     &__refresh {
         position: absolute;
         top: 0;
         right: 0;
+        width: 30px;
         height: 30px;
         line-height: 30px;
-        border: 1px solid $color-divide;
-        background: transparent;
         margin: 0;
-        padding: 0 10px;
-        font-weight: 300;
+        padding: 0;
+        color: $color;
 
         &:hover {
-            background: $color-divide;
             cursor: pointer;
+            color: rgba($color, 0.5);
         }
     }
 
