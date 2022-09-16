@@ -10,40 +10,66 @@
         <table class="yearly__table">
             <tr>
                 <th>Месяц</th>
-                <th>Время</th>
-                <th>Рабочие дни*</th>
+                <th>Рабочее время</th>
+                <th>Рабочие дни</th>
                 <th>Выработка</th>
             </tr>
             <tr v-for="item in result" :key="item.k">
                 <td class="is-name">{{ item.name }}</td>
-                <td class="is-seconds">{{ formatTime(item.seconds) }}</td>
-                <td class="is-days">
-                    <input
-                        :class="{'is-custom': item.days != item.workDays}"
-                        type="number"
-                        v-model="item.days"
-                        :title="'По умолчанию: ' + item.workDays"
-                        step="0.5"
-                        @keyup="daysChange(item.k, item.days)"
-                        @change="daysChange(item.k, item.days)"
-                    />
+                <td class="is-seconds">
+                    <span>{{ formatTime(item.seconds) }}</span>
+                    -
+                    <span
+                        ><input
+                            type="text"
+                            v-model="item.deltaSeconds"
+                            @change="changeSeconds(item.k, item.deltaSeconds)"
+                            @keyup="changeSeconds(item.k, item.deltaSeconds)"
+                            v-mask="{regex: '[0-9]*:[0-5][0-9]:[0-5][0-9]'}"
+                    /></span>
+                    =
+                    <span><b>{{ formatTime(item.seconds - unformatTime(item.deltaSeconds)) }}</b></span>
                 </td>
-                <td class="is-result">{{ item.result }}</td>
+                <td class="is-days">
+                    <span>{{ item.days }}</span>
+                    -
+                    <span
+                        ><input
+                            type="text"
+                            v-model="item.deltaDays"
+                            @change="changeDays(item.k, item.deltaDays)"
+                            @keyup="changeDays(item.k, item.deltaDays)"
+                            v-mask="{regex: '[0-9]*[.,]?[0-9]*'}"
+                    /></span>
+                    =
+                    <span><b>{{ item.days - getFloat(item.deltaDays) }}</b></span>
+                </td>
+                <td class="is-result"><b>{{ item.result }}</b></td>
             </tr>
             <tr>
                 <td></td>
-                <td>{{ formatTime(totalTime) }}</td>
-                <td class="is-total-days"><input type="number" :value="totalDays" disabled></td>
+                <td class="is-seconds-result">
+                    <span>{{ formatTime(totalSeconds) }}</span>
+                    -
+                    <span>{{ formatTime(totalDeltaSeconds) }}</span>
+                    =
+                    <span>{{ formatTime(totalSeconds - totalDeltaSeconds) }}</span>
+                </td>
+                <td class="is-days-result">
+                    <span>{{ totalDays }}</span>
+                    -
+                    <span>{{ totalDeltaDays }}</span>
+                    =
+                    <span>{{ totalDays - totalDeltaDays }}</span>
+                </td>
                 <td></td>
             </tr>
         </table>
-        <div class="yearly__notes"><b>*</b> - производственный календарь, не учитываются отпуска и отгулы</div>
     </div>
 </template>
 
 <script>
-import {formatTime} from '@/functions';
-
+import {formatTime, unformatTime} from '@/functions';
 import {getApiTimes, isMonthOff} from '@/api';
 
 export default {
@@ -64,7 +90,7 @@ export default {
                 'Ноябрь',
                 'Декабрь',
             ],
-            isLoading: false
+            isLoading: false,
         };
     },
     computed: {
@@ -73,17 +99,28 @@ export default {
                 apiUrl: this.$store.state.yearlyApiUrl,
                 userId: this.$store.state.yearlyUserId,
                 date: this.$store.state.yearlyDate,
-                days: this.$store.state.yearlyDays,
+                deltaSeconds: this.$store.state.yearlyDeltaSeconds,
+                deltaDays: this.$store.state.yearlyDeltaDays,
             };
+        },
+        totalSeconds() {
+            return this.result.reduce((prev, curr) => {
+                return (prev += curr.seconds);
+            }, 0);
+        },
+        totalDeltaSeconds() {
+            return this.result.reduce((prev, curr) => {
+                return (prev += this.unformatTime(curr.deltaSeconds));
+            }, 0);
         },
         totalDays() {
             return this.result.reduce((prev, curr) => {
-                return (prev += curr.days);
+                return (prev += this.getFloat(curr.days));
             }, 0);
         },
-        totalTime() {
+        totalDeltaDays() {
             return this.result.reduce((prev, curr) => {
-                return (prev += curr.seconds);
+                return (prev += this.getFloat(curr.deltaDays));
             }, 0);
         },
     },
@@ -100,14 +137,20 @@ export default {
     },
     methods: {
         formatTime,
+        unformatTime,
 
         async getResult() {
             let result = [],
                 userId = this.settings.userId,
                 year = this.settings.date.getFullYear(),
-                days = this.settings.days;
+                deltaSeconds = this.settings.deltaSeconds,
+                deltaDays = this.settings.deltaDays;
 
             this.isLoading = true;
+
+            // *** старая корректировка дней (для совместимости)
+            let oldDays = JSON.parse(localStorage.getItem('yearlyDays'));
+            // *** end
 
             // массив результата
             this.months.forEach((item, i) => {
@@ -115,8 +158,9 @@ export default {
                     k: i,
                     name: item,
                     seconds: 0,
+                    deltaSeconds: null,
                     days: 0,
-                    workDays: 0,
+                    deltaDays: null,
                     result: 0,
                 };
             });
@@ -125,10 +169,32 @@ export default {
             for (const item of result) {
                 let workDays = await this.getMonthWorkDays(year, item.k + 1);
                 result[item.k].days = workDays;
-                result[item.k].workDays = workDays;
 
-                if (days[userId]?.[year]?.[item.k]) {
-                    result[item.k].days = days[userId][year][item.k];
+                // корректировка времени
+                if (deltaSeconds?.[userId]?.[year]?.[item.k]) {
+                    result[item.k].deltaSeconds = formatTime(deltaSeconds[userId][year][item.k]);
+                }
+
+                // *** старая корректировка дней (для совместимости)
+                if (
+                    oldDays?.[userId]?.[year]?.[item.k]
+                    &&
+                    !deltaDays?.[userId]?.[year]?.[item.k]
+                ) {
+                    if (!deltaDays[userId]) deltaDays[userId] = {};
+                    if (!deltaDays[userId][year]) deltaDays[userId][year] = {};
+
+                    deltaDays[userId][year][item.k] = workDays - oldDays[userId][year][item.k];
+                    localStorage.setItem('yearlyDeltaDays', JSON.stringify(deltaDays));
+
+                    delete oldDays[userId][year][item.k];
+                    localStorage.setItem('yearlyDays', JSON.stringify(oldDays));
+                }
+                // *** end
+
+                // корректировка дней
+                if (deltaDays?.[userId]?.[year]?.[item.k]) {
+                    result[item.k].deltaDays = deltaDays[userId][year][item.k];
                 }
             }
 
@@ -148,43 +214,67 @@ export default {
             });
 
             this.result = result;
-            this.daysRecalc();
+            this.recalcResult();
         },
 
-        daysChange(month, value) {
-            let storeDays = this.settings.days,
+        changeSeconds(month, delta) {
+            let storeDelta = this.settings.deltaSeconds,
                 user = this.settings.userId,
                 year = this.settings.date.getFullYear();
 
-            value = parseFloat(String(value).replace(',', '.'));
+            delta = this.unformatTime(delta);
+            if (storeDelta[user]?.[year]?.[month] == delta) return;
 
-            if (storeDays[user]?.[year]?.[month] == value) return;
+            if (!storeDelta[user]) storeDelta[user] = {};
+            if (!storeDelta[user][year]) storeDelta[user][year] = {};
 
-            if (!storeDays[user]) storeDays[user] = {};
-            if (!storeDays[user][year]) storeDays[user][year] = {};
-
-            if (value) {
-                storeDays[user][year][month] = value;
+            if (delta) {
+                storeDelta[user][year][month] = delta;
             } else {
-                delete storeDays[user][year][month];
-                this.result[month].days = this.result[month].workDays;
+                delete storeDelta[user][year][month];
             }
 
-            this.$store.commit('yearlyDaysChange', {
-                yearlyDays: storeDays,
+            this.$store.commit('yearlyDeltaSecondsChange', {
+                yearlyDeltaSeconds: storeDelta,
             });
 
-            this.daysRecalc();
+            this.recalcResult();
         },
-        daysRecalc() {
+        changeDays(month, delta) {
+            let storeDelta = this.settings.deltaDays,
+                user = this.settings.userId,
+                year = this.settings.date.getFullYear();
+
+            delta = this.getFloat(delta);
+
+            if (storeDelta[user]?.[year]?.[month] == delta) return;
+
+            if (!storeDelta[user]) storeDelta[user] = {};
+            if (!storeDelta[user][year]) storeDelta[user][year] = {};
+
+            if (delta) {
+                storeDelta[user][year][month] = delta;
+            } else {
+                delete storeDelta[user][year][month];
+            }
+
+            this.$store.commit('yearlyDeltaDaysChange', {
+                yearlyDeltaDays: storeDelta,
+            });
+
+            this.recalcResult();
+        },
+
+        recalcResult() {
             this.result = this.result.map((item) => {
-                if (item.seconds && item.days) {
-                    item.result = parseFloat(item.seconds) / 60 / 60 / parseFloat(String(item.days).replace(',', '.'));
-                    item.result = (Math.ceil(item.result * 100) / 100).toFixed(1);
-                }
+                let seconds = this.getFloat(item.seconds) - this.getFloat(this.unformatTime(item.deltaSeconds));
+                let days = this.getFloat(item.days) - this.getFloat(item.deltaDays);
+
+                item.result = (Math.ceil(seconds / 60 / 60 / days * 100) / 100).toFixed(1);
                 return item;
             });
         },
+
         async getMonthWorkDays(year, month) {
             let result = 0,
                 days = await isMonthOff(year, month);
@@ -195,6 +285,10 @@ export default {
 
             return result;
         },
+
+        getFloat(str) {
+            return parseFloat(String(str || 0).replace(',', '.'));
+        }
     },
 };
 </script>
@@ -227,13 +321,17 @@ export default {
 
         tr {
             border: 0;
+
+            &:hover {
+                background: $color-divide;
+            }
         }
 
         th {
             font-weight: 500;
             border: 0;
             border-bottom: 2px solid $color-divide;
-            text-align: right;
+            text-align: center;
             padding: 5px 15px;
         }
 
@@ -243,24 +341,43 @@ export default {
             padding: 5px 15px;
             text-align: right;
 
-            &.is-days {
+            &.is-seconds {
                 input {
-                    width: 75px;
                     text-align: right;
+                }
 
-                    &.is-custom {
-                        background: rgba($color-divide, 0.5);
-                    }
+                span {
+                    display: inline-block;
+                    width: 90px;
+                    text-align: right;
                 }
             }
 
-            &.is-total-days {
-                input {
-                    width: 75px;
+            &.is-seconds-result {
+                span {
+                    display: inline-block;
+                    width: 90px;
                     text-align: right;
-                    background: transparent;
-                    border-color: transparent;
-                    color: $color;
+                }
+            }
+
+            &.is-days {
+                input {
+                    text-align: right;
+                }
+
+                span {
+                    display: inline-block;
+                    width: 55px;
+                    text-align: right;
+                }
+            }
+
+            &.is-days-result {
+                span {
+                    display: inline-block;
+                    width: 55px;
+                    text-align: right;
                 }
             }
         }
@@ -271,11 +388,6 @@ export default {
         display: flex;
         justify-content: flex-start;
         align-items: baseline;
-    }
-
-    &__notes {
-        margin-top: 10px;
-        opacity: 0.8;
     }
 }
 </style>

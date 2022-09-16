@@ -16,7 +16,8 @@ export default createStore({
             yearlyApiUrl: localStorage.getItem('yearlyApiUrl') || '',
             yearlyUserId: localStorage.getItem('yearlyUserId') || '',
             yearlyDate: yearlyDate,
-            yearlyDays: JSON.parse(localStorage.getItem('yearlyDays')) || {},
+            yearlyDeltaDays: JSON.parse(localStorage.getItem('yearlyDeltaDays')) || {},
+            yearlyDeltaSeconds: JSON.parse(localStorage.getItem('yearlyDeltaSeconds')) || {},
         };
     },
     mutations: {
@@ -51,10 +52,15 @@ export default createStore({
             state.yearlyDate = payload.yearlyDate;
             localStorage.setItem('yearlyDate', payload.yearlyDate);
         },
-        yearlyDaysChange(state, payload) {
-            // console.log('yearlyDaysChange');
-            state.yearlyDays = payload.yearlyDays;
-            localStorage.setItem('yearlyDays', JSON.stringify(payload.yearlyDays));
+        yearlyDeltaDaysChange(state, payload) {
+            // console.log('yearlyDeltaDaysChange');
+            state.yearlyDeltaDays = payload.yearlyDeltaDays;
+            localStorage.setItem('yearlyDeltaDays', JSON.stringify(payload.yearlyDeltaDays));
+        },
+        yearlyDeltaSecondsChange(state, payload) {
+            // console.log('yearlyDeltaSecondsChange');
+            state.yearlyDeltaSeconds = payload.yearlyDeltaSeconds;
+            localStorage.setItem('yearlyDeltaSeconds', JSON.stringify(payload.yearlyDeltaSeconds));
         },
     },
 });

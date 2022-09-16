@@ -22,6 +22,19 @@ export const formatTime = (seconds) => {
     return [h.toString().padStart(2, '0'), m.toString().padStart(2, '0'), s.toString().padStart(2, '0')].join(':');
 };
 
+export const unformatTime = (time) => {
+    if (!time) return 0;
+
+    let h, m, s;
+
+    time = time.split(':');
+    h = parseInt(time[0]) || 0;
+    m = parseInt(time[1]) || 0;
+    s = parseInt(time[2]) || 0;
+
+    return h * 3600 + m * 60 + s;
+};
+
 export const getCurrDay = () => {
     const now = new Date();
 

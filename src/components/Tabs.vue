@@ -36,7 +36,7 @@ export default {
     },
     data() {
         return {
-            active: 0,
+            active: 1,
             tabs: [
                 {k: 0, name: 'Неделька', content: 'TabWeekly'},
                 {k: 1, name: 'Годик', content: 'TabYearly'},
