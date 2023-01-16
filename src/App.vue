@@ -1,20 +1,20 @@
 <template>
     <div class="reports">
-        <Header />
+        <AppHeader />
         <Tabs />
     </div>
 </template>
 
 <script>
-import Header from '@/components/Header.vue';
-import Tabs from '@/components/Tabs.vue';
+import AppHeader from "@/components/AppHeader.vue";
+import Tabs from "@/components/Tabs.vue";
 
-import 'normalize.css';
+import "normalize.css";
 
 export default {
-    name: 'App',
+    name: "App",
     components: {
-        Header,
+        AppHeader,
         Tabs,
     },
 };

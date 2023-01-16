@@ -4,6 +4,12 @@
     </header>
 </template>
 
+<script>
+export default {
+    name: "AppHeader",
+};
+</script>
+
 <style lang="scss">
 .header {
     margin-bottom: 20px;

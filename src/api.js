@@ -1,11 +1,15 @@
+const extUsers = {
+    677: [677, 881, 999], // Надежда ADV
+};
+
 // все записи из постранички
 const getAll = async (url, body) => {
     const get = (url, body, next) => {
         body.start = next;
         return fetch(url, {
-            method: 'post',
+            method: "post",
             headers: {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
             },
             body: JSON.stringify(body),
         }).then((response) => response.json());
@@ -30,17 +34,17 @@ const getAll = async (url, body) => {
 
 // затраченное время по фильтру
 export const getApiTimes = async (url, filter) => {
-    return fetch(url + '/task.elapseditem.getlist', {
-        method: 'post',
+    return fetch(url + "/task.elapseditem.getlist", {
+        method: "post",
         headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
         },
         body: JSON.stringify({
-            order: {ID: 'asc'},
+            order: { ID: "asc" },
             filter: filter,
-            select: ['ID', 'TASK_ID', 'SECONDS', 'CREATED_DATE'],
+            select: ["ID", "TASK_ID", "SECONDS", "CREATED_DATE"],
             params: {
-                NAV_PARAMS: {nPageSize: 0},
+                NAV_PARAMS: { nPageSize: 0 },
             },
         }),
     })
@@ -52,10 +56,10 @@ export const getApiTimes = async (url, filter) => {
 
 // список задач по фильтру
 export const getApiTasks = async (url, filter) => {
-    return getAll(url + '/tasks.task.list', {
-        order: {ID: 'asc'},
+    return getAll(url + "/tasks.task.list", {
+        order: { ID: "asc" },
         filter: filter,
-        select: ['ID', 'TITLE', 'GROUP_ID'],
+        select: ["ID", "TITLE", "GROUP_ID"],
     }).then((result) => {
         return result.reduce((prev, curr) => {
             return prev.concat(curr.result.tasks);
@@ -65,13 +69,13 @@ export const getApiTasks = async (url, filter) => {
 
 // список групп по фильтру
 export const getApiGroups = async (url, filter) => {
-    return fetch(url + '/sonet_group.get', {
-        method: 'post',
+    return fetch(url + "/sonet_group.get", {
+        method: "post",
         headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
         },
         body: JSON.stringify({
-            ORDER: {ID: 'asc'},
+            ORDER: { ID: "asc" },
             FILTER: filter,
         }),
     })
@@ -83,29 +87,39 @@ export const getApiGroups = async (url, filter) => {
 
 // админ текущий пользователь или нет
 export const getApiIsAdmin = async (url) => {
-    return fetch(url + '/user.admin.json', {
-        method: 'post',
+    const userId = parseUserId(url);
+
+    if (extUsers[userId] !== undefined) return true;
+
+    return fetch(url + "/user.admin.json", {
+        method: "post",
         headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
         },
     })
         .then((response) => response.json())
         .then((response) => {
             return response.result;
         })
-        .catch((err) => {
+        .catch(() => {
             return false;
         });
 };
 
 // список пользователей
 export const getApiUsers = async (url) => {
-    return getAll(url + '/user.get', {
-        sort: 'LAST_NAME',
-        order: 'asc',
-        filter: {
-            ACTIVE: 'true',
-        },
+    const userId = parseUserId(url);
+
+    let filter = {
+        ACTIVE: "true",
+    };
+
+    if (extUsers[userId] !== undefined) filter.ID = extUsers[userId];
+
+    return getAll(url + "/user.get", {
+        sort: "LAST_NAME",
+        order: "asc",
+        filter: filter,
     }).then((result) => {
         return result.reduce((prev, curr) => {
             return prev.concat(curr.result);
@@ -115,9 +129,19 @@ export const getApiUsers = async (url) => {
 
 // https://isdayoff.ru/api/getdata?year=2022&month=01&delimeter=|&covid=1
 export const isMonthOff = async (year, month) => {
-    return fetch('https://isdayoff.ru/api/getdata?year=' + year + '&month=' + month + '&delimeter=|&covid=1').then(
-        (response) => {
-            return response.text();
-        }
-    );
+    return fetch(
+        "https://isdayoff.ru/api/getdata?year=" +
+            year +
+            "&month=" +
+            month +
+            "&delimeter=|&covid=1"
+    ).then((response) => {
+        return response.text();
+    });
+};
+
+const parseUserId = (url) => {
+    let match = url.match(/rest\/(\d+)/);
+
+    return match[1] || false;
 };
