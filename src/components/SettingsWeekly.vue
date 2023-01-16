@@ -1,14 +1,21 @@
 <template>
-    <div class="settings" :class="{'is-loading': isLoading}">
+    <div class="settings" :class="{ 'is-loading': isLoading }">
         <div class="settings__items">
-            <div class="settings__item" :class="{'settings__item--2': !isUserAdmin}">
+            <div
+                class="settings__item"
+                :class="{ 'settings__item--2': !isUserAdmin }"
+            >
                 <label class="settings__label">Строка API</label>
-                <input class="settings__input" type="text" v-model="apiUrl" />
+                <input v-model="apiUrl" class="settings__input" type="text" />
             </div>
-            <div class="settings__item" v-if="isUserAdmin">
+            <div v-if="isUserAdmin" class="settings__item">
                 <label class="settings__label">Пользователь</label>
-                <select class="settings__input" v-model="userId">
-                    <option v-for="user in users" :key="user.ID" :value="user.ID">
+                <select v-model="userId" class="settings__input">
+                    <option
+                        v-for="user in users"
+                        :key="user.ID"
+                        :value="user.ID"
+                    >
                         {{ user.LAST_NAME }} {{ user.NAME }} ({{ user.ID }})
                     </option>
                 </select>
@@ -18,18 +25,20 @@
                 <input class="settings__input" type="text" name="dates" />
             </div>
             <div class="settings__item">
-                <button class="settings__btn" @click="setSettings">Применить</button>
+                <button class="settings__btn" @click="setSettings">
+                    Применить
+                </button>
             </div>
         </div>
     </div>
 </template>
 
 <script>
-import AirDatepicker from 'air-datepicker';
-import 'air-datepicker/air-datepicker.css';
+import AirDatepicker from "air-datepicker";
+import "air-datepicker/air-datepicker.css";
 
-import {getCurrDay, getCurrWeek, getCurrMonth} from '@/functions';
-import {getApiIsAdmin, getApiUsers} from '@/api';
+import { getCurrDay, getCurrWeek, getCurrMonth } from "@/functions";
+import { getApiIsAdmin, getApiUsers } from "@/api";
 
 export default {
     data() {
@@ -49,7 +58,7 @@ export default {
     },
     mounted() {
         let btnDay = {
-                content: 'День',
+                content: "День",
                 onClick: (dp) => {
                     let dates = getCurrDay();
                     dp.selectDate(dates);
@@ -57,7 +66,7 @@ export default {
                 },
             },
             btnWeek = {
-                content: 'Неделя',
+                content: "Неделя",
                 onClick: (dp) => {
                     let dates = getCurrWeek();
                     dp.selectDate(dates);
@@ -65,7 +74,7 @@ export default {
                 },
             },
             btnMonth = {
-                content: 'Месяц',
+                content: "Месяц",
                 onClick: (dp) => {
                     let dates = getCurrMonth();
                     dp.selectDate(dates);
@@ -73,9 +82,9 @@ export default {
                 },
             };
 
-        this.datePickerInst = new AirDatepicker('[name=dates]', {
+        this.datePickerInst = new AirDatepicker("[name=dates]", {
             range: true,
-            multipleDatesSeparator: ' - ',
+            multipleDatesSeparator: " - ",
             selectedDates: [this.start, this.end],
             buttons: [btnDay, btnWeek, btnMonth],
             toggleSelected: false,
@@ -93,7 +102,7 @@ export default {
         },
         users() {
             this.isLoading = false;
-        }
+        },
     },
     methods: {
         async getUsers() {
@@ -108,21 +117,23 @@ export default {
             }
         },
         setSettings() {
-            this.$store.commit('weeklyApiChange', {
+            this.$store.commit("weeklyApiChange", {
                 weeklyApiUrl: this.apiUrl,
             });
-            this.$store.commit('weeklyUserChange', {
+            this.$store.commit("weeklyUserChange", {
                 weeklyUserId: this.userId,
             });
-            this.$store.commit('weeklyDateChange', {
+            this.$store.commit("weeklyDateChange", {
                 weeklyDateFrom: this.datePickerInst.selectedDates[0],
-                weeklyDateTo: this.datePickerInst.selectedDates[1] || this.datePickerInst.selectedDates[0],
+                weeklyDateTo:
+                    this.datePickerInst.selectedDates[1] ||
+                    this.datePickerInst.selectedDates[0],
             });
         },
         setUserId() {
             if (this.apiUrl) {
                 let match = false;
-                if (match = this.apiUrl.match(/rest\/(\d+)/)) {
+                if ((match = this.apiUrl.match(/rest\/(\d+)/))) {
                     this.userId = match[1] || false;
                 }
             } else {

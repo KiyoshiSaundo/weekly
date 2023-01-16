@@ -1,7 +1,11 @@
 <template>
-    <div class="yearly" :class="{'is-loading': isLoading}">
+    <div class="yearly" :class="{ 'is-loading': isLoading }">
         <div class="yearly__refresh" @click="getResult" title="Обновить данные">
-            <svg fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30">
+            <svg
+                fill="currentColor"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 30 30"
+            >
                 <path
                     d="M 15 3 C 12.031398 3 9.3028202 4.0834384 7.2070312 5.875 A 1.0001 1.0001 0 1 0 8.5058594 7.3945312 C 10.25407 5.9000929 12.516602 5 15 5 C 20.19656 5 24.450989 8.9379267 24.951172 14 L 22 14 L 26 20 L 30 14 L 26.949219 14 C 26.437925 7.8516588 21.277839 3 15 3 z M 4 10 L 0 16 L 3.0507812 16 C 3.562075 22.148341 8.7221607 27 15 27 C 17.968602 27 20.69718 25.916562 22.792969 24.125 A 1.0001 1.0001 0 1 0 21.494141 22.605469 C 19.74593 24.099907 17.483398 25 15 25 C 9.80344 25 5.5490109 21.062074 5.0488281 16 L 8 16 L 4 10 z"
                 />
@@ -19,32 +23,47 @@
                 <td class="is-seconds">
                     <span>{{ formatTime(item.seconds) }}</span>
                     -
-                    <span
-                        ><input
+                    <span>
+                        <input
                             type="text"
                             v-model="item.deltaSeconds"
                             @change="changeSeconds(item.k, item.deltaSeconds)"
                             @keyup="changeSeconds(item.k, item.deltaSeconds)"
-                            v-mask="{regex: '[0-9]*:[0-5][0-9]:[0-5][0-9]'}"
-                    /></span>
+                            v-mask="{ regex: '[0-9]*:[0-5][0-9]:[0-5][0-9]' }"
+                        />
+                    </span>
                     =
-                    <span><b>{{ formatTime(item.seconds - unformatTime(item.deltaSeconds)) }}</b></span>
+                    <span>
+                        <b>
+                            {{
+                                formatTime(
+                                    item.seconds -
+                                        unformatTime(item.deltaSeconds)
+                                )
+                            }}
+                        </b>
+                    </span>
                 </td>
                 <td class="is-days">
                     <span>{{ item.days }}</span>
                     -
-                    <span
-                        ><input
+                    <span>
+                        <input
                             type="text"
                             v-model="item.deltaDays"
                             @change="changeDays(item.k, item.deltaDays)"
                             @keyup="changeDays(item.k, item.deltaDays)"
-                            v-mask="{regex: '[0-9]*[.,]?[0-9]*'}"
-                    /></span>
+                            v-mask="{ regex: '[0-9]*[.,]?[0-9]*' }"
+                        />
+                    </span>
                     =
-                    <span><b>{{ item.days - getFloat(item.deltaDays) }}</b></span>
+                    <span>
+                        <b>{{ item.days - getFloat(item.deltaDays) }}</b>
+                    </span>
                 </td>
-                <td class="is-result"><b>{{ item.result }}</b></td>
+                <td class="is-result">
+                    <b>{{ item.result }}</b>
+                </td>
             </tr>
             <tr>
                 <td></td>
@@ -53,7 +72,9 @@
                     -
                     <span>{{ formatTime(totalDeltaSeconds) }}</span>
                     =
-                    <span>{{ formatTime(totalSeconds - totalDeltaSeconds) }}</span>
+                    <span>
+                        {{ formatTime(totalSeconds - totalDeltaSeconds) }}
+                    </span>
                 </td>
                 <td class="is-days-result">
                     <span>{{ totalDays }}</span>
@@ -69,26 +90,26 @@
 </template>
 
 <script>
-import {formatTime, unformatTime} from '@/functions';
-import {getApiTimes, isMonthOff} from '@/api';
+import { formatTime, unformatTime } from "@/functions";
+import { getApiTimes, isMonthOff } from "@/api";
 
 export default {
     data() {
         return {
             result: [],
             months: [
-                'Январь',
-                'Февраль',
-                'Март',
-                'Апрель',
-                'Май',
-                'Июнь',
-                'Июль',
-                'Август',
-                'Сентябрь',
-                'Октябрь',
-                'Ноябрь',
-                'Декабрь',
+                "Январь",
+                "Февраль",
+                "Март",
+                "Апрель",
+                "Май",
+                "Июнь",
+                "Июль",
+                "Август",
+                "Сентябрь",
+                "Октябрь",
+                "Ноябрь",
+                "Декабрь",
             ],
             isLoading: false,
         };
@@ -149,7 +170,7 @@ export default {
             this.isLoading = true;
 
             // *** старая корректировка дней (для совместимости)
-            let oldDays = JSON.parse(localStorage.getItem('yearlyDays'));
+            let oldDays = JSON.parse(localStorage.getItem("yearlyDays"));
             // *** end
 
             // массив результата
@@ -172,23 +193,28 @@ export default {
 
                 // корректировка времени
                 if (deltaSeconds?.[userId]?.[year]?.[item.k]) {
-                    result[item.k].deltaSeconds = formatTime(deltaSeconds[userId][year][item.k]);
+                    result[item.k].deltaSeconds = formatTime(
+                        deltaSeconds[userId][year][item.k]
+                    );
                 }
 
                 // *** старая корректировка дней (для совместимости)
                 if (
-                    oldDays?.[userId]?.[year]?.[item.k]
-                    &&
+                    oldDays?.[userId]?.[year]?.[item.k] &&
                     !deltaDays?.[userId]?.[year]?.[item.k]
                 ) {
                     if (!deltaDays[userId]) deltaDays[userId] = {};
                     if (!deltaDays[userId][year]) deltaDays[userId][year] = {};
 
-                    deltaDays[userId][year][item.k] = workDays - oldDays[userId][year][item.k];
-                    localStorage.setItem('yearlyDeltaDays', JSON.stringify(deltaDays));
+                    deltaDays[userId][year][item.k] =
+                        workDays - oldDays[userId][year][item.k];
+                    localStorage.setItem(
+                        "yearlyDeltaDays",
+                        JSON.stringify(deltaDays)
+                    );
 
                     delete oldDays[userId][year][item.k];
-                    localStorage.setItem('yearlyDays', JSON.stringify(oldDays));
+                    localStorage.setItem("yearlyDays", JSON.stringify(oldDays));
                 }
                 // *** end
 
@@ -202,8 +228,8 @@ export default {
             let times = [];
             let filter = {
                 USER_ID: userId,
-                '>=CREATED_DATE': '01.01.' + year + ' 00:00:00',
-                '<=CREATED_DATE': '31.12.' + year + ' 23:59:59',
+                ">=CREATED_DATE": "01.01." + year + " 00:00:00",
+                "<=CREATED_DATE": "31.12." + year + " 23:59:59",
             };
             if (filter.USER_ID) {
                 times = await getApiTimes(this.settings.apiUrl, filter);
@@ -234,7 +260,7 @@ export default {
                 delete storeDelta[user][year][month];
             }
 
-            this.$store.commit('yearlyDeltaSecondsChange', {
+            this.$store.commit("yearlyDeltaSecondsChange", {
                 yearlyDeltaSeconds: storeDelta,
             });
 
@@ -258,7 +284,7 @@ export default {
                 delete storeDelta[user][year][month];
             }
 
-            this.$store.commit('yearlyDeltaDaysChange', {
+            this.$store.commit("yearlyDeltaDaysChange", {
                 yearlyDeltaDays: storeDelta,
             });
 
@@ -267,10 +293,15 @@ export default {
 
         recalcResult() {
             this.result = this.result.map((item) => {
-                let seconds = this.getFloat(item.seconds) - this.getFloat(this.unformatTime(item.deltaSeconds));
-                let days = this.getFloat(item.days) - this.getFloat(item.deltaDays);
+                let seconds =
+                    this.getFloat(item.seconds) -
+                    this.getFloat(this.unformatTime(item.deltaSeconds));
+                let days =
+                    this.getFloat(item.days) - this.getFloat(item.deltaDays);
 
-                item.result = (Math.ceil(seconds / 60 / 60 / days * 100) / 100).toFixed(1);
+                item.result = (
+                    Math.ceil((seconds / 60 / 60 / days) * 100) / 100
+                ).toFixed(1);
                 return item;
             });
         },
@@ -279,7 +310,7 @@ export default {
             let result = 0,
                 days = await isMonthOff(year, month);
 
-            result = days.split('|').reduce((prev, curr) => {
+            result = days.split("|").reduce((prev, curr) => {
                 return curr != 1 ? ++prev : prev;
             }, 0);
 
@@ -287,8 +318,8 @@ export default {
         },
 
         getFloat(str) {
-            return parseFloat(String(str || 0).replace(',', '.'));
-        }
+            return parseFloat(String(str || 0).replace(",", "."));
+        },
     },
 };
 </script>
@@ -298,10 +329,10 @@ export default {
     position: relative;
 
     &__refresh {
+        width: 30px;
         position: absolute;
         top: 0;
         right: 0;
-        width: 30px;
         height: 30px;
         line-height: 30px;
         margin: 0;

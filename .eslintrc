@@ -1,0 +1,68 @@
+{
+    "env": {
+        "browser": true,
+        "es2021": true,
+        "node": true
+    },
+    "extends": ["eslint:recommended", "plugin:vue/vue3-essential", "prettier"],
+    "parserOptions": {
+        "ecmaVersion": 12,
+        "sourceType": "module"
+    },
+    "plugins": ["vue", "prettier"],
+    "rules": {
+        "prettier/prettier": [
+            "warn",
+            {
+                "endOfLine": "auto"
+            }
+        ],
+        // "prettier/prettier": [
+        //     "error",
+        //     {
+        //         "printWidth": 80,
+        //         "trailingComma": "es5",
+        //         "useTabs": false,
+        //         "tabWidth": 2,
+        //         "semi": true,
+        //         "singleQuote": false,
+        //         "bracketSpacing": true,
+        //         "bracketSameLine": false,
+        //         "htmlWhitespaceSensitivity": "ignore",
+        //         "arrowParens": "always",
+        //         "endOfLine": "auto"
+        //         // singleAttributePerLine: true,
+        //     }
+        // ],
+        "vue/attributes-order": [
+            "error",
+            {
+                "order": [
+                    "DEFINITION",
+                    "LIST_RENDERING",
+                    "CONDITIONALS",
+                    "RENDER_MODIFIERS",
+                    "GLOBAL",
+                    ["UNIQUE", "SLOT"],
+                    "TWO_WAY_BINDING",
+                    "OTHER_DIRECTIVES",
+                    "OTHER_ATTR",
+                    "EVENTS",
+                    "CONTENT"
+                ],
+                "alphabetical": false
+            }
+        ]
+        // "vue/max-attributes-per-line": [
+        //     "error",
+        //     {
+        //         singleline: {
+        //             max: 1,
+        //         },
+        //         multiline: {
+        //             max: 1,
+        //         },
+        //     },
+        // ],
+    }
+}
