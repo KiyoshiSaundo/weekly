@@ -1,5 +1,6 @@
 const extUsers = {
     677: [677, 881, 999], // Надежда ADV
+    589: ["*"], // Оксана DEV
 };
 
 // все записи из постранички
@@ -114,7 +115,9 @@ export const getApiUsers = async (url) => {
         ACTIVE: "true",
     };
 
-    if (extUsers[userId] !== undefined) filter.ID = extUsers[userId];
+    if (extUsers[userId] !== undefined && !extUsers[userId].includes("*")) {
+        filter.ID = extUsers[userId];
+    }
 
     return getAll(url + "/user.get", {
         sort: "LAST_NAME",
