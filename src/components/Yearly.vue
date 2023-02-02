@@ -1,6 +1,6 @@
 <template>
     <div class="yearly" :class="{ 'is-loading': isLoading }">
-        <div class="yearly__refresh" @click="getResult" title="Обновить данные">
+        <div class="yearly__refresh" title="Обновить данные" @click="getResult">
             <svg
                 fill="currentColor"
                 xmlns="http://www.w3.org/2000/svg"
@@ -12,85 +12,120 @@
             </svg>
         </div>
         <table class="yearly__table">
-            <tr>
-                <th>Месяц</th>
-                <th>Рабочее время</th>
-                <th>Рабочие дни</th>
-                <th>Выработка</th>
-            </tr>
-            <tr v-for="item in result" :key="item.k">
-                <td class="is-name">{{ item.name }}</td>
-                <td class="is-seconds">
-                    <span>{{ formatTime(item.seconds) }}</span>
-                    -
-                    <span>
-                        <input
-                            type="text"
-                            v-model="item.deltaSeconds"
-                            @change="changeSeconds(item.k, item.deltaSeconds)"
-                            @keyup="changeSeconds(item.k, item.deltaSeconds)"
-                            v-mask="{ regex: '[0-9]*:[0-5][0-9]:[0-5][0-9]' }"
-                        />
-                    </span>
-                    =
-                    <span>
-                        <b>
-                            {{
-                                formatTime(
-                                    item.seconds -
-                                        unformatTime(item.deltaSeconds)
-                                )
-                            }}
-                        </b>
-                    </span>
-                </td>
-                <td class="is-days">
-                    <span>{{ item.days }}</span>
-                    -
-                    <span>
-                        <input
-                            type="text"
-                            v-model="item.deltaDays"
-                            @change="changeDays(item.k, item.deltaDays)"
-                            @keyup="changeDays(item.k, item.deltaDays)"
-                            v-mask="{ regex: '[0-9]*[.,]?[0-9]*' }"
-                        />
-                    </span>
-                    =
-                    <span>
-                        <b>{{ item.days - getFloat(item.deltaDays) }}</b>
-                    </span>
-                </td>
-                <td class="is-result">
-                    <b>{{ item.result }}</b>
-                </td>
-            </tr>
-            <tr>
-                <td></td>
-                <td class="is-seconds-result">
-                    <span>{{ formatTime(totalSeconds) }}</span>
-                    -
-                    <span>{{ formatTime(totalDeltaSeconds) }}</span>
-                    =
-                    <span>
-                        {{ formatTime(totalSeconds - totalDeltaSeconds) }}
-                    </span>
-                </td>
-                <td class="is-days-result">
-                    <span>{{ totalDays }}</span>
-                    -
-                    <span>{{ totalDeltaDays }}</span>
-                    =
-                    <span>{{ totalDays - totalDeltaDays }}</span>
-                </td>
-                <td></td>
-            </tr>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Месяц</th>
+                    <th>Рабочее время</th>
+                    <th>Рабочие дни</th>
+                    <th>Выработка</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template v-for="item in result" :key="item.k">
+                    <tr>
+                        <td class="is-collapse">
+                            <span
+                                class="yearly__collapse"
+                                @click="openReport"
+                            ></span>
+                        </td>
+                        <td class="is-name">{{ item.name }}</td>
+                        <td class="is-seconds">
+                            <span>{{ formatTime(item.seconds) }}</span>
+                            -
+                            <span>
+                                <input
+                                    v-model="item.deltaSeconds"
+                                    v-mask="{
+                                        regex: '[0-9]*:[0-5][0-9]:[0-5][0-9]',
+                                    }"
+                                    type="text"
+                                    @change="
+                                        changeSeconds(item.k, item.deltaSeconds)
+                                    "
+                                    @keyup="
+                                        changeSeconds(item.k, item.deltaSeconds)
+                                    "
+                                />
+                            </span>
+                            =
+                            <span>
+                                <b>
+                                    {{
+                                        formatTime(
+                                            item.seconds -
+                                                unformatTime(item.deltaSeconds)
+                                        )
+                                    }}
+                                </b>
+                            </span>
+                        </td>
+                        <td class="is-days">
+                            <span>{{ item.days }}</span>
+                            -
+                            <span>
+                                <input
+                                    v-model="item.deltaDays"
+                                    v-mask="{ regex: '[0-9]*[.,]?[0-9]*' }"
+                                    type="text"
+                                    @change="changeDays(item.k, item.deltaDays)"
+                                    @keyup="changeDays(item.k, item.deltaDays)"
+                                />
+                            </span>
+                            =
+                            <span>
+                                <b>
+                                    {{ item.days - getFloat(item.deltaDays) }}
+                                </b>
+                            </span>
+                        </td>
+                        <td class="is-result">
+                            <b>{{ item.result }}</b>
+                        </td>
+                    </tr>
+                    <tr class="yearly__reports">
+                        <td colspan="5" class="is-report">
+                            <div
+                                v-for="day in reports[item.k]['days']"
+                                :key="day.i"
+                            >
+                                {{ day.date }} - {{ day.day }} -
+                                {{ formatTime(day.seconds) }}
+                            </div>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td class="is-seconds-result">
+                        <span>{{ formatTime(totalSeconds) }}</span>
+                        -
+                        <span>{{ formatTime(totalDeltaSeconds) }}</span>
+                        =
+                        <span>
+                            {{ formatTime(totalSeconds - totalDeltaSeconds) }}
+                        </span>
+                    </td>
+                    <td class="is-days-result">
+                        <span>{{ totalDays }}</span>
+                        -
+                        <span>{{ totalDeltaDays }}</span>
+                        =
+                        <span>{{ totalDays - totalDeltaDays }}</span>
+                    </td>
+                    <td></td>
+                </tr>
+            </tfoot>
         </table>
     </div>
 </template>
 
 <script>
-import { formatTime, unformatTime } from "@/functions";
+import { formatDate, formatTime, unformatTime } from "@/functions";
 import { getApiTimes, isMonthOff } from "@/api";
 
 export default {
@@ -112,6 +147,8 @@ export default {
                 "Декабрь",
             ],
             isLoading: false,
+            reports: {},
+            openedReport: false,
         };
     },
     computed: {
@@ -157,6 +194,7 @@ export default {
         },
     },
     methods: {
+        formatDate,
         formatTime,
         unformatTime,
 
@@ -183,6 +221,7 @@ export default {
                     days: 0,
                     deltaDays: null,
                     result: 0,
+                    reports: {},
                 };
             });
 
@@ -238,6 +277,8 @@ export default {
                 let date = new Date(item.CREATED_DATE);
                 result[date.getMonth()].seconds += parseInt(item.SECONDS);
             });
+
+            this.fillReports(times);
 
             this.result = result;
             this.recalcResult();
@@ -306,6 +347,36 @@ export default {
             });
         },
 
+        fillReports(times) {
+            let result = {};
+            let year = this.settings.date.getFullYear();
+
+            for (let i = 0, ii = 11; i <= ii; i++) {
+                result[i] = {
+                    i: i,
+                    days: {},
+                };
+                let maxDays = 33 - new Date(year, i, 33).getDate();
+                for (let j = 1; j <= maxDays; j++) {
+                    let date = new Date(year, i, j);
+                    result[i]["days"][j] = {
+                        i: j,
+                        date: formatDate(date),
+                        day: this.getDayName(date.getDay()),
+                        seconds: 0,
+                    };
+                }
+            }
+
+            times.forEach((item) => {
+                let date = new Date(item.CREATED_DATE);
+                result[date.getMonth()]["days"][date.getDate()]["seconds"] +=
+                    parseInt(item.SECONDS);
+            });
+
+            this.reports = result;
+        },
+
         async getMonthWorkDays(year, month) {
             let result = 0,
                 days = await isMonthOff(year, month);
@@ -319,6 +390,29 @@ export default {
 
         getFloat(str) {
             return parseFloat(String(str || 0).replace(",", "."));
+        },
+
+        getDayName(i) {
+            switch (i) {
+                case 0:
+                    return "вс";
+                case 1:
+                    return "пн";
+                case 2:
+                    return "вт";
+                case 3:
+                    return "ср";
+                case 4:
+                    return "чт";
+                case 5:
+                    return "пт";
+                case 6:
+                    return "сб";
+            }
+        },
+
+        openReport(e) {
+            e.target.closest("tr").classList.toggle("is-open");
         },
     },
 };
@@ -352,7 +446,9 @@ export default {
 
         tr {
             border: 0;
+        }
 
+        tbody tr {
             &:hover {
                 background: $color-divide;
             }
@@ -371,6 +467,15 @@ export default {
             border-bottom: 1px solid $color-divide;
             padding: 5px 15px;
             text-align: right;
+
+            &.is-collapse {
+                width: 20px;
+                padding: 5px;
+            }
+
+            &.is-report {
+                text-align: left;
+            }
 
             &.is-seconds {
                 input {
@@ -414,11 +519,31 @@ export default {
         }
     }
 
-    &__item {
-        margin-bottom: 10px;
-        display: flex;
-        justify-content: flex-start;
-        align-items: baseline;
+    &__collapse {
+        display: inline-block;
+        width: 0;
+        height: 0;
+        border-style: solid;
+        border-width: 7px 0 7px 12px;
+        border-color: transparent transparent transparent $color;
+        cursor: pointer;
+
+        .is-open & {
+            border-width: 12px 7px 0 7px;
+            border-color: $color transparent transparent transparent;
+        }
+    }
+
+    &__reports {
+        display: none;
+
+        &:hover {
+            background: transparent !important;
+        }
+
+        .is-open + & {
+            display: table-row;
+        }
     }
 }
 </style>
