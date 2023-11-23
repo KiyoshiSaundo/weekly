@@ -1,18 +1,18 @@
 <template>
     <div>
         <SettingsWeekly />
-        <Weekly />
+        <ReportWeekly />
     </div>
 </template>
 
 <script>
 import SettingsWeekly from '@/components/SettingsWeekly.vue';
-import Weekly from '@/components/Weekly.vue';
+import ReportWeekly from '@/components/ReportWeekly.vue';
 
 export default {
     components: {
         SettingsWeekly,
-        Weekly,
+        ReportWeekly,
     },
 };
 </script>
