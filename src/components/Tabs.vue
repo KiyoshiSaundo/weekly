@@ -5,7 +5,7 @@
                 v-for="tab in tabs"
                 :key="tab.k"
                 class="tabs__tab"
-                :class="{'is-active': tab.k == active}"
+                :class="{ 'is-active': tab.k == active }"
                 @click="changeTab(tab.k)"
             >
                 {{ tab.name }}
@@ -16,7 +16,7 @@
                 v-for="tab in tabs"
                 :key="tab.k"
                 class="tabs__content"
-                :class="{'is-active': tab.k == active}"
+                :class="{ 'is-active': tab.k == active }"
                 @click="changeTab(tab.k)"
             >
                 <component :is="tab.content"></component>
@@ -26,20 +26,23 @@
 </template>
 
 <script>
-import TabWeekly from '@/components/TabWeekly.vue';
-import TabYearly from '@/components/TabYearly.vue';
+import TabWeekly from "@/components/TabWeekly.vue";
+import TabYearly from "@/components/TabYearly.vue";
+import TabInstruction from "@/components/TabInstruction.vue";
 
 export default {
     components: {
         TabWeekly,
         TabYearly,
+        TabInstruction,
     },
     data() {
         return {
             active: 0,
             tabs: [
-                {k: 0, name: 'Неделька', content: 'TabWeekly'},
-                {k: 1, name: 'Годик', content: 'TabYearly'},
+                { k: 0, name: "Неделька", content: "TabWeekly" },
+                { k: 1, name: "Годик", content: "TabYearly" },
+                { k: 2, name: "Инструкция", content: "TabInstruction" },
             ],
         };
     },

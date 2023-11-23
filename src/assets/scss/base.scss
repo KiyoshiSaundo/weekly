@@ -7,12 +7,12 @@
 
 html,
 body {
-    height: 100%;
-    width: 100%;
-    min-width: 320px;
     font-family: "Roboto", sans-serif;
     font-weight: 300;
     line-height: 1.5;
+    width: 100%;
+    min-width: 320px;
+    height: 100%;
     color: $color;
 }
 
@@ -43,4 +43,10 @@ select,
     padding: 0 10px;
     border: 1px solid $color-divide;
     appearance: none;
+}
+
+hr {
+    margin: 20px 0;
+    border: 0;
+    border-top: 1px solid $color-divide;
 }

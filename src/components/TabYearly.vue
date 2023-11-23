@@ -1,18 +1,18 @@
 <template>
     <div>
         <SettingsYearly />
-        <Yearly />
+        <ReportYearly />
     </div>
 </template>
 
 <script>
 import SettingsYearly from '@/components/SettingsYearly.vue';
-import Yearly from '@/components/Yearly.vue';
+import ReportYearly from '@/components/ReportYearly.vue';
 
 export default {
     components: {
         SettingsYearly,
-        Yearly,
+        ReportYearly,
     },
 };
 </script>
