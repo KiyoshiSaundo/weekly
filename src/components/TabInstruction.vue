@@ -74,11 +74,18 @@
                     <b>"Настройка прав"</b>
                     выбираем:
                     <br />
-                    <i>Задачи (task)</i>
+                    <i>
+                        Задачи (task)
+                        <span style="color: red">
+                            именно "task", без "s" на конце
+                        </span>
+                    </i>
                     <br />
                     <i>Рабочие группы (sonet_group)</i>
                     <br />
                     <i>Пользователи (user)</i>
+                    <br />
+                    <br />
                 </div>
                 <div class="instruction__img">
                     <img src="@/assets/images/1-5.png" data-fancybox />
@@ -322,5 +329,4 @@ export default {
 .fancybox-image {
     outline: 1px solid $color-divide !important;
 }
-
 </style>
