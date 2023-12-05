@@ -5,10 +5,13 @@
                 v-for="tab in tabs"
                 :key="tab.k"
                 class="tabs__tab"
-                :class="{ 'is-active': tab.k == active }"
+                :class="{
+                    'is-active': tab.k == active,
+                    'is-space': tab.name == 'SPACE',
+                }"
                 @click="changeTab(tab.k)"
             >
-                {{ tab.name }}
+                {{ tab.name != "SPACE" ? tab.name : "" }}
             </div>
         </div>
         <div class="tabs__contents">
@@ -42,7 +45,8 @@ export default {
             tabs: [
                 { k: 0, name: "Неделька", content: "TabWeekly" },
                 { k: 1, name: "Годик", content: "TabYearly" },
-                { k: 2, name: "Инструкция", content: "TabInstruction" },
+                { k: 2, name: "SPACE" },
+                { k: 3, name: "Инструкция", content: "TabInstruction" },
             ],
         };
     },
@@ -72,6 +76,7 @@ export default {
         position: relative;
         padding: 7px 20px;
         margin-left: -1px;
+        flex-shrink: 0;
         cursor: pointer;
 
         &.is-active {
@@ -79,6 +84,12 @@ export default {
             padding-top: 12px;
             padding-bottom: 12px;
             cursor: default;
+        }
+
+        &.is-space {
+            flex-grow: 1;
+            opacity: 0;
+            pointer-events: none;
         }
     }
 
