@@ -145,14 +145,21 @@ export default createStore({
         },
         weeklyFilterChange(context, payload) {
             context.state.weeklyTimestamp = Date.now();
-            this.commit("weeklyUserIdChange", payload.weeklyUserId);
-            this.commit("weeklyStartChange", payload.weeklyStart);
-            this.commit("weeklyEndChange", payload.weeklyEnd);
+
+            if (payload.weeklyUserId)
+                this.commit("weeklyUserIdChange", payload.weeklyUserId);
+            if (payload.weeklyStart)
+                this.commit("weeklyStartChange", payload.weeklyStart);
+            if (payload.weeklyEnd)
+                this.commit("weeklyEndChange", payload.weeklyEnd);
         },
         yearlyFilterChange(context, payload) {
             context.state.yearlyTimestamp = Date.now();
-            this.commit("yearlyUserIdChange", payload.yearlyUserId);
-            this.commit("yearlyYearChange", payload.yearlyYear);
+
+            if (payload.yearlyUserId)
+                this.commit("yearlyUserIdChange", payload.yearlyUserId);
+            if (payload.yearlyYear)
+                this.commit("yearlyYearChange", payload.yearlyYear);
         },
         yearlyDeltaSecondsChange(context, payload) {
             let res = context.state.yearlyDeltaSeconds;

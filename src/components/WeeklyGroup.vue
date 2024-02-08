@@ -83,8 +83,6 @@ export default {
 
     &__title {
         display: inline-block;
-        padding-left: calc(22px + 5px);
-        position: relative;
 
         @media print {
             padding-left: 0;
@@ -92,6 +90,19 @@ export default {
 
         a {
             text-decoration: none;
+        }
+    }
+
+    &__name {
+        position: relative;
+        display: inline-block;
+        font-weight: 600;
+        padding-left: calc(22px + 5px);
+        user-select: none;
+
+        &:hover {
+            color: $color-accent;
+            cursor: pointer;
         }
     }
 
@@ -109,16 +120,6 @@ export default {
 
         @media print {
             display: none;
-        }
-    }
-
-    &__name {
-        font-weight: 600;
-        user-select: none;
-
-        &:hover {
-            color: $color-accent;
-            cursor: pointer;
         }
     }
 
