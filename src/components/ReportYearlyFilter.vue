@@ -1,14 +1,14 @@
 <template>
     <div class="app-filter">
-        <InputYearlyCalendar
-            class="app-filter__item"
-            :value="this.$store.state.yearlyYear"
-            @changeDate="changeDate"
-        />
         <InputUsers
             class="app-filter__item"
             :value="$store.state.yearlyUserId"
             @changeUser="changeUser"
+        />
+        <InputYearlyCalendar
+            class="app-filter__item"
+            :value="this.$store.state.yearlyYear"
+            @changeDate="changeDate"
         />
         <div class="app-filter__spacer"></div>
         <SvgIcon

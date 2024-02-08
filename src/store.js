@@ -131,7 +131,7 @@ export default createStore({
         appLogout() {
             this.commit("appMessagesClear");
             this.commit("appAuthChange", false);
-            this.commit("appApiUrlChange", false);
+            this.commit("appApiUrlChange", "");
             this.commit("appUserIdChange", false);
         },
         appMesageShow(context, payload) {

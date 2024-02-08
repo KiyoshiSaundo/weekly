@@ -76,6 +76,7 @@ export default {
 <style lang="scss">
 .weekly-group {
     margin-bottom: calc($gap / 4);
+    break-inside: avoid;
 
     &:last-child {
         margin-bottom: 0;
@@ -83,10 +84,6 @@ export default {
 
     &__title {
         display: inline-block;
-
-        @media print {
-            padding-left: 0;
-        }
 
         a {
             text-decoration: none;
@@ -103,6 +100,10 @@ export default {
         &:hover {
             color: $color-accent;
             cursor: pointer;
+        }
+
+        @media print {
+            padding-left: 0;
         }
     }
 

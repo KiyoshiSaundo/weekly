@@ -1,0 +1,14 @@
+@import "@fancyapps/ui/dist/fancybox/fancybox.css";
+
+[data-fancybox-toggle-fullscreen],
+[data-panzoom-action="iterateZoom"] {
+    display: none !important;
+}
+
+.fancybox__backdrop {
+    background: rgba($color-white, 0.75) !important;
+}
+
+.fancybox-image {
+    outline: $border !important;
+}

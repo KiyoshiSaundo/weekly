@@ -1,6 +1,7 @@
 <template>
     <div class="app" :class="{ 'is-loading': isAppLoading }">
         <AppAuth v-if="!isAuth" />
+        <!-- <AppAuthInstruction v-if="!isAuth" /> -->
         <div v-if="isAuth" class="app__sidebar">
             <AppName />
             <AppMenu />
@@ -18,6 +19,7 @@
 <script>
 import AppNotify from "@/components/AppNotify.vue";
 import AppAuth from "@/components/AppAuth.vue";
+import AppAuthInstruction from "@/components/AppAuthInstruction.vue";
 import AppName from "@/components/AppName.vue";
 import AppMenu from "@/components/AppMenu.vue";
 import AppUser from "@/components/AppUser.vue";
@@ -29,6 +31,7 @@ import PageAppSettings from "@/pages/PageAppSettings.vue";
 export default {
     components: {
         AppAuth,
+        AppAuthInstruction,
         AppNotify,
         AppName,
         AppMenu,

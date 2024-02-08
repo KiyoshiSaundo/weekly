@@ -1,5 +1,10 @@
 <template>
     <div class="app-filter">
+        <InputUsers
+            class="app-filter__item"
+            :value="$store.state.weeklyUserId"
+            @changeUser="changeUser"
+        />
         <InputWeeklyCalendar
             class="app-filter__item"
             :value="[
@@ -7,11 +12,6 @@
                 this.$store.state.weeklyEnd,
             ]"
             @changeDate="changeDate"
-        />
-        <InputUsers
-            class="app-filter__item"
-            :value="$store.state.weeklyUserId"
-            @changeUser="changeUser"
         />
         <div class="app-filter__spacer"></div>
         <SvgIcon
