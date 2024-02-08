@@ -1,4 +1,14 @@
-$color: #000;
-$color-divide: #eee;
+$font-family: 'Montserrat';
 
-$padding-base: 20px;
+$color-grey: #f4f4f4;
+$color-white: #fff;
+$color-border: rgba(#a0a0a0, 0.3);
+$color-heading: #3c3b3b;
+$color-text: #646464;
+$color-accent: #2ebaae;
+$color-red: darken(#f00, 20%);
+$color-green: darken(#0f0, 30%);
+
+$gap: 48px;
+
+$border: 1px solid $color-border;

@@ -1,106 +1,120 @@
 <template>
-    <div class="weekly" :class="{ 'is-loading': isLoading }">
-        <div class="weekly__header">
-            <span class="weekly__collapse-all" @click="collapseAll">
-                <IconArrow />
-                <span>Свернуть все</span>
+    <div
+        class="report-weekly"
+        :class="{ 'is-loading': !isAppLoading && isLoading }"
+    >
+        <div v-if="isAppLoading">Загрузка</div>
+        <div
+            v-if="!isAppLoading && !isEmpty && !isFirstLoading"
+            class="report-weekly__body"
+        >
+            <span
+                class="report-weekly__toggle"
+                :class="{ 'is-collapse': collapsedAll }"
+                @click="toggleAll"
+            >
+                <SvgIcon
+                    name="arrow"
+                    class="report-weekly__toggle-arrow"
+                ></SvgIcon>
+                <span>
+                    {{ collapsedAll ? "Развернуть все" : "Свернуть все" }}
+                </span>
             </span>
+            <WeeklyGroup
+                v-for="group in result"
+                :key="group.id"
+                :group="group"
+                :collapsedAll="collapsedAll"
+                @checked="selectGroup"
+            />
         </div>
-        <IconRefresh
-            class="weekly__refresh"
-            title="Обновить данные"
-            @click="getResult"
-        />
-        <div v-if="result.length" class="weekly__items">
-            <div v-for="group in result" :key="group.id" class="weekly__item">
-                <div class="weekly__label">
-                    <IconArrow
-                        class="weekly__collapse"
-                        title="Свернуть/развернуть"
-                        @click="collapseItems"
-                    />
-                    <b>{{ group.name }}</b>
-                    ({{ formatTime(group.seconds) }})
-                    <input
-                        v-model="group.selected"
-                        class="weekly__checkbox"
-                        type="checkbox"
-                        value="group.id"
-                    />
-                </div>
-                <div class="weekly__tasks">
-                    <div
-                        v-for="task in group.tasks"
-                        :key="task.id"
-                        class="weekly__task"
-                    >
-                        <a :href="task.link" target="_blank">
-                            {{ task.id }}
-                        </a>
-                        - {{ task.name }} ({{ formatTime(task.seconds) }})
-                    </div>
-                </div>
+        <div v-if="!isAppLoading && !isEmpty" class="report-weekly__aside">
+            <div v-if="!isFirstLoading">
+                <b>
+                    Всего затрачено:
+                    <span class="mono">{{ formatTime(summTotal) }}</span>
+                </b>
+            </div>
+            <div v-if="!isFirstLoading && summChecked">
+                Сумма выбранных:
+                <span class="mono">{{ formatTime(summChecked) }}</span>
             </div>
         </div>
-        <div v-if="result.length" class="weekly__footer">
-            <div class="weekly__checked">
-                Сумма выбранных: {{ formatTime(summChecked) }}
-            </div>
-            <div class="weekly__total">
-                Всего затрачено: {{ formatTime(summTotal) }}
-            </div>
+        <div
+            v-if="!isAppLoading && isEmpty && !isFirstLoading"
+            class="report-weekly__empty"
+        >
+            Данных нет
         </div>
-        <div v-if="!result.length" class="weekly__empty">Данных нет</div>
     </div>
 </template>
 
 <script>
-import IconRefresh from "@/components/IconRefresh.vue";
-import IconArrow from "@/components/IconArrow.vue";
-
-import { formatDate, formatTime } from "@/functions";
+import { formatDate, formatTime, getObjectWithKey } from "@/functions";
 import { getApiTimes, getApiTasks, getApiGroups } from "@/api";
+
+import SvgIcon from "@/components/SvgIcon.vue";
+import WeeklyGroup from "@/components/WeeklyGroup.vue";
 
 export default {
     components: {
-        IconRefresh,
-        IconArrow,
+        SvgIcon,
+        WeeklyGroup,
     },
     data() {
         return {
+            isLoading: true,
+            isFirstLoading: true,
+            apiUrl: this.$store.state.appApiUrl,
             result: [],
-            isLoading: false,
+            selectedGroups: [],
+            collapsedAll: false,
         };
     },
     computed: {
-        settings() {
+        isAppLoading() {
+            return this.$store.state.appLoading;
+        },
+        filter() {
             return {
-                apiUrl: this.$store.state.weeklyApiUrl,
-                userId: this.$store.state.weeklyUserId,
-                dateFrom: this.$store.state.weeklyDateFrom,
-                dateTo: this.$store.state.weeklyDateTo,
+                userId:
+                    this.$store.state.weeklyUserId ||
+                    this.$store.state.appUserId,
+                start: new Date(this.$store.state.weeklyStart),
+                end: new Date(this.$store.state.weeklyEnd),
+                hash: this.$store.state.weeklyTimestamp,
             };
         },
+        isEmpty() {
+            return !Object.keys(this.result).length;
+        },
         summChecked() {
-            return this.result.reduce((prev, curr) => {
-                return (prev += curr.selected ? curr.seconds : 0);
+            return Object.values(this.result).reduce((prev, curr) => {
+                return (prev += this.selectedGroups[curr.id] ? curr.time : 0);
             }, 0);
         },
         summTotal() {
-            return this.result.reduce((prev, curr) => {
-                return (prev += curr.seconds);
+            return Object.values(this.result).reduce((prev, curr) => {
+                return (prev += curr.time);
             }, 0);
         },
     },
-    created() {
-        this.getResult();
+    async mounted() {
+        if (!this.isAppLoading) {
+            this.result = await this.getResult();
+        }
     },
     watch: {
-        settings() {
-            this.getResult();
+        async isAppLoading() {
+            this.result = await this.getResult();
+        },
+        async filter() {
+            this.result = await this.getResult();
         },
         result() {
             this.isLoading = false;
+            this.isFirstLoading = false;
         },
     },
     methods: {
@@ -108,262 +122,166 @@ export default {
         formatTime,
 
         async getResult() {
-            if (!this.settings.apiUrl || !this.settings.userId) return false;
-
+            if (!this.apiUrl || !this.filter.userId) return {};
             this.isLoading = true;
 
-            const [itemsTime, itemsTask, itemsGroup] =
-                await this.getResultData();
+            let [apiTime, apiTasks, apiGroups] = await this.getApiData();
+            apiGroups = getObjectWithKey(apiGroups, "ID");
+            apiTasks = getObjectWithKey(apiTasks, "id");
 
-            let result = {
-                0: {
-                    id: 0,
-                    name: "Нет доступа к группе",
-                    seconds: 0,
-                    selected: this.result[0] ? this.result[0].selected : false,
-                    tasks: {
-                        0: {
-                            id: 0,
-                            name: "Нет доступа к задаче или задача удалена",
-                            seconds: 0,
-                        },
-                    },
-                },
-            };
+            let result = {};
+            apiTime.forEach((item) => {
+                let taskId = item.TASK_ID || 0,
+                    apiTask = apiTasks[taskId] || false,
+                    groupId = apiTask.groupId || 0,
+                    apiGroup = apiGroups[groupId] || false;
 
-            // группы
-            itemsGroup.forEach((group) => {
-                result[group.ID] = {
-                    id: group.ID,
-                    name: group.NAME,
-                    seconds: 0,
-                    selected: this.result[group.ID]
-                        ? this.result[group.ID].selected
-                        : false,
+                // группа
+                let group = result[groupId] || {
+                    id: groupId || 0,
+                    id4user: apiGroup.ID || false,
+                    name: apiGroup.NAME || "Нет доступа к группе",
+                    time: 0,
                     tasks: {},
                 };
+                group.time += parseInt(item.SECONDS);
+
+                // задача
+                let task = group.tasks[taskId] || {
+                    id: taskId || 0,
+                    id4user: apiTask.id || false,
+                    name: apiTask.title || "Нет доступа к задаче",
+                    time: 0,
+                };
+                task.time += parseInt(item.SECONDS);
+
+                result[groupId] = group;
+                result[groupId].tasks[taskId] = task;
             });
 
-            // задачи
-            let domain = this.settings.apiUrl.split(/\/+/);
-            domain = domain[0] + "//" + domain[1];
-            let task2group = { 0: 0 }; // задача => группа
-            itemsTask.forEach((task) => {
-                let gr = result[task.groupId],
-                    grId = gr ? gr.id : 0;
-                task2group[task.id] = grId;
-                result[grId].tasks[task.id] = {
-                    id: task.id,
-                    name: task.title,
-                    seconds: 0,
-                    link:
-                        domain +
-                        "/company/personal/user/" +
-                        this.settings.userId +
-                        "/tasks/task/view/" +
-                        task.id +
-                        "/",
-                };
-            });
+            return result;
+        },
+
+        async getApiData() {
+            let timeItems = [],
+                taskItems = [],
+                groupItems = [];
 
             // время
-            itemsTime.forEach((time) => {
-                let gr = result[task2group[time.TASK_ID]],
-                    grId = gr ? gr.id : 0,
-                    ts = result[grId].tasks[time.TASK_ID],
-                    tsId = ts ? ts.id : 0;
-
-                result[grId].seconds += parseInt(time.SECONDS);
-                result[grId].tasks[tsId].seconds += parseInt(time.SECONDS);
+            timeItems = await getApiTimes(this.apiUrl, {
+                USER_ID: this.filter.userId,
+                ">=CREATED_DATE": formatDate(this.filter.start) + " 00:00:00",
+                "<=CREATED_DATE": formatDate(this.filter.end) + " 23:59:59",
             });
-
-            // итог
-            this.result = Object.values(result).filter((group) => {
-                group.tasks = Object.values(group.tasks).filter((task) => {
-                    return task.seconds;
+            // задачи
+            if (timeItems.length) {
+                taskItems = await getApiTasks(this.apiUrl, {
+                    ID: timeItems.map((item) => item.TASK_ID),
                 });
-                return group.seconds;
-            });
-        },
-        async getResultData() {
-            // записи о потраченном времени
-            let itemsTime = [];
-            let filter = {
-                USER_ID: this.settings.userId,
-                ">=CREATED_DATE":
-                    formatDate(this.settings.dateFrom) + " 00:00:00",
-                "<=CREATED_DATE":
-                    formatDate(this.settings.dateTo) + " 23:59:59",
-            };
-            if (filter.USER_ID) {
-                itemsTime = await getApiTimes(this.settings.apiUrl, filter);
+            }
+            // группы
+            if (taskItems.length) {
+                groupItems = await getApiGroups(this.apiUrl, {
+                    ID: taskItems.map((item) => item.groupId),
+                });
             }
 
-            // записи о задачах
-            let itemsTask = [];
-            filter = {
-                ID: itemsTime.map((item) => {
-                    return item.TASK_ID;
-                }),
-            };
-            if (filter.ID.length) {
-                itemsTask = await getApiTasks(this.settings.apiUrl, filter);
-            }
-
-            // информация по группам
-            let itemsGroup = [];
-            filter = {
-                ID: itemsTask.map((item) => {
-                    return item.groupId;
-                }),
-            };
-            if (filter.ID.length) {
-                itemsGroup = await getApiGroups(this.settings.apiUrl, filter);
-            }
-
-            return [itemsTime, itemsTask, itemsGroup];
+            return [timeItems, taskItems, groupItems];
         },
 
-        collapseItems(e) {
-            e.target.closest(".weekly__item").classList.toggle("is-collapse");
+        selectGroup(a, b) {
+            this.selectedGroups[a] = b;
         },
-
-        collapseAll(e) {
-            let btnAll = e.target.closest(".weekly__collapse-all");
-            let needOpen = btnAll.classList.contains("is-collapse");
-
-            if (needOpen) {
-                btnAll.classList.remove("is-collapse");
-                btnAll.querySelector("span").innerText = "Свернуть все";
-            } else {
-                btnAll.classList.add("is-collapse");
-                btnAll.querySelector("span").innerText = "Развернуть все";
-            }
-            document.querySelectorAll(".weekly__item").forEach((item) => {
-                if (needOpen) {
-                    item.classList.remove("is-collapse");
-                } else {
-                    item.classList.add("is-collapse");
-                }
-            });
+        toggleAll() {
+            this.collapsedAll = !this.collapsedAll;
         },
     },
 };
 </script>
 
 <style lang="scss">
-.weekly {
-    position: relative;
+.report-weekly {
+    @include preloading($color-accent, $color-white);
+    padding: calc($gap / 2) $gap;
+    display: flex;
+    justify-content: flex-start;
+    align-items: stretch;
+    flex-grow: 1;
+    flex-wrap: wrap;
 
-    &__refresh {
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 30px;
-        height: 30px;
-        line-height: 30px;
-        margin: 0;
-        padding: 0;
-        color: $color;
+    @media print {
+        align-items: start;
+        flex-grow: 0;
+    }
+
+    &__body {
+        margin: -#{calc($gap / 2)} 0;
+        padding: calc($gap / 2) 0;
+        width: 70%;
+        padding-right: $gap;
+
+        @media print {
+            order: 2;
+            width: 100%;
+            margin: 0;
+            margin-top: calc($gap / 2);
+            padding-right: 0;
+        }
+    }
+
+    &__aside {
+        margin: -#{calc($gap / 2)} 0;
+        padding: calc($gap / 2) 0;
+        width: 30%;
+        padding-left: $gap;
+        border-left: $border;
+
+        @media print {
+            order: 1;
+            width: 100%;
+            border-left: 0;
+            border-bottom: $border;
+            padding-left: 0;
+        }
+    }
+
+    &__toggle {
+        display: inline-block;
+        cursor: pointer;
+        margin-bottom: calc($gap / 4);
+        user-select: none;
+        padding-left: calc(22px + 5px);
+        position: relative;
 
         &:hover {
-            cursor: pointer;
-            color: rgba($color, 0.5);
-        }
-    }
-
-    &__header {
-        margin-bottom: 20px;
-    }
-
-    &__item {
-        margin-bottom: 15px;
-
-        &:last-child {
-            margin-bottom: 0;
-        }
-    }
-
-    &__label {
-        line-height: 1;
-
-        input {
-            margin-left: 5px;
-        }
-    }
-
-    &__checkbox {
-        margin-right: 10px;
-    }
-
-    &__collapse {
-        display: inline-block;
-        width: 12px;
-        height: 12px;
-        margin-right: 5px;
-        cursor: pointer;
-        transform: rotate(90deg);
-        user-select: none;
-
-        .is-collapse & {
-            transform: rotate(0);
-        }
-    }
-
-    &__collapse-all {
-        cursor: pointer;
-        user-select: none;
-
-        svg {
-            width: 12px;
-            height: 12px;
-            margin-right: 5px;
-            transform: rotate(90deg);
+            color: $color-accent;
         }
 
-        &.is-collapse svg {
-            transform: rotate(0);
-        }
-    }
-
-    &__tasks {
-        margin-top: 5px;
-        padding-left: 17px;
-        display: block;
-
-        .is-collapse & {
+        @media print {
             display: none;
         }
     }
 
-    &__task {
-        a {
-            color: $color;
-            text-decoration: none;
+    &__toggle-arrow {
+        width: 22px;
+        height: 22px;
+        transform: rotate(90deg);
+        position: absolute;
+        left: 0;
+        top: 0;
+        cursor: pointer;
 
-            &:hover {
-                text-decoration: underline;
-            }
+        &:hover {
+            color: $color-accent;
         }
-    }
 
-    &__footer {
-        margin-top: 20px;
-        padding-top: 20px;
-        border-top: 1px solid $color-divide;
-    }
+        .is-collapse & {
+            transform: rotate(0);
+        }
 
-    &__checked {
-        margin-bottom: 5px;
-    }
-
-    &__total {
-        font-weight: 500;
-    }
-
-    &__empty {
-        text-align: center;
-        font-weight: 500;
+        @media print {
+            display: none;
+        }
     }
 }
 </style>

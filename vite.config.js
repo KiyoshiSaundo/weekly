@@ -1,18 +1,28 @@
-import {fileURLToPath, URL} from 'url';
+import { fileURLToPath, URL } from "url";
 
-import {defineConfig} from 'vite';
-import vue from '@vitejs/plugin-vue';
+import { createSvgIconsPlugin } from "vite-plugin-svg-icons";
+import path from "path";
+
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    base: '/weekly/',
+    base: "/weekly/",
     build: {
-        outDir: './docs',
+        outDir: "./docs",
     },
-    plugins: [vue()],
+    plugins: [
+        vue(),
+        createSvgIconsPlugin({
+            iconDirs: [path.resolve(process.cwd(), "src/assets/icons")],
+            symbolId: "icon-[dir]-[name]",
+            customDomId: "__svg__icons__dom__",
+        }),
+    ],
     resolve: {
         alias: {
-            '@': fileURLToPath(new URL('./src', import.meta.url)),
+            "@": fileURLToPath(new URL("./src", import.meta.url)),
         },
     },
     css: {
@@ -20,8 +30,8 @@ export default defineConfig({
             scss: {
                 additionalData: `
                     @import "@/assets/scss/_vars.scss";
-                    @import "@/assets/scss/base.scss";
-                    @import "@/assets/scss/common.scss";
+                    @import "@/assets/scss/_functions.scss";
+                    @import "@/assets/scss/_mixins.scss";
                 `,
             },
         },
