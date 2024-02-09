@@ -51,7 +51,7 @@ export const getApiTasks = async (url, filter) => {
     return getAll(url + "/tasks.task.list", {
         order: { ID: "asc" },
         filter: filter,
-        select: ["ID", "TITLE", "GROUP_ID", "CREATED_BY"],
+        select: ["ID", "TITLE", "GROUP_ID", "GROUP", "CREATED_BY"],
     }).then((result) => {
         return result.reduce((prev, curr) => {
             return prev.concat(curr.result.tasks);

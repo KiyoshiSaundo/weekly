@@ -140,7 +140,10 @@ export default {
                 let group = result[groupId] || {
                     id: groupId || 0,
                     id4user: apiGroup.ID || false,
-                    name: apiGroup.NAME || "Нет доступа к группе",
+                    name:
+                        apiGroup?.NAME ||
+                        apiTask?.group?.name ||
+                        "Нет доступа к группе",
                     time: 0,
                     tasks: {},
                 };
