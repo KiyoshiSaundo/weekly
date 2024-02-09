@@ -1,8 +1,9 @@
 <template>
-    <div v-if="result" class="app-user">
-        <div class="app-user__label" :title="result.ID">
+    <div class="app-user">
+        <div v-if="result" class="app-user__label" :title="result.ID">
             {{ result.NAME }}
         </div>
+        <div v-else class="app-user__label">Пользователь</div>
         <!-- <SvgIcon
             name="settings"
             class="app-user__button"
@@ -38,12 +39,15 @@ export default {
         },
     },
     async mounted() {
-        this.result = await this.getResult();
-    },
-    watch: {
-        async apiUrl() {
-            this.result = await this.getResult();
-        },
+        const res = await this.getResult();
+        if (!res.status) {
+            this.$store.dispatch("appMesageShow", {
+                type: "error",
+                text: "getUserInfo(): \r\n " + res.result,
+            });
+        } else {
+            this.result = res.result;
+        }
     },
     methods: {
         settings() {

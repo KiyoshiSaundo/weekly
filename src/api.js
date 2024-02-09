@@ -125,10 +125,23 @@ export const getUserInfo = async (url) => {
     })
         .then((response) => response.json())
         .then((response) => {
-            return response.result;
+            if (response.error !== undefined) {
+                return {
+                    status: 0,
+                    result: response.error_description,
+                };
+            } else {
+                return {
+                    status: 1,
+                    result: response.result,
+                };
+            }
         })
-        .catch(() => {
-            return false;
+        .catch((response) => {
+            return {
+                status: 0,
+                result: response,
+            };
         });
 };
 
