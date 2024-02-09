@@ -1,0 +1,44 @@
+@import "air-datepicker/air-datepicker.css";
+
+.air-datepicker-body--day-name {
+    color: $color-accent;
+}
+
+.air-datepicker-cell.-year-,
+.air-datepicker-cell.-day- {
+    &.-current-,
+    &.-current-.-in-range- {
+        color: $color-accent;
+        font-weight: 600;
+    }
+
+    &.-selected-,
+    &.-selected-.-focus- {
+        color: $color-white;
+        background: $color-accent;
+    }
+
+    &.-in-range-,
+    &.-in-range-.-focus- {
+        color: $color-text;
+        background: rgba($color-accent, 0.1);
+    }
+
+    &.-range-from-,
+    &.-range-to- {
+        color: $color-white;
+        border: 1px solid $color-accent;
+        background: $color-accent;
+    }
+}
+
+.air-datepicker-button {
+    color: $color-text;
+    font-weight: 600;
+    background: transparent;
+
+    &:hover {
+        color: $color-accent;
+        background: transparent;
+    }
+}
