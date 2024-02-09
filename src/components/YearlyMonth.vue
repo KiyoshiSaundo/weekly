@@ -164,12 +164,15 @@ export default {
 
     &__result {
         font-size: 12px;
+        display: inline-flex;
+        align-items: baseline;
     }
 
     &__time,
     &__days {
         position: relative;
         cursor: pointer;
+        margin: 0 5px;
 
         &:hover {
             color: $color-accent;
@@ -189,7 +192,7 @@ export default {
         background: transparent;
         text-align: right;
         display: inline-block;
-        pointer-events: none;
+        width: auto;
 
         &:focus {
             border: 1px solid $color-accent;
@@ -202,6 +205,7 @@ export default {
     &__average {
         font-size: 16px;
         font-weight: 600;
+        margin-left: 5px;
     }
 
     &__daily {
