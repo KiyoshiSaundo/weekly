@@ -3,7 +3,7 @@
         <div v-if="result" class="app-user__label" :title="result.ID">
             {{ result.NAME }}
         </div>
-        <div v-else class="app-user__label">Пользователь</div>
+        <div v-else class="app-user__label">Юзер {{ userId }}</div>
         <!-- <SvgIcon
             name="settings"
             class="app-user__button"
@@ -37,15 +37,13 @@ export default {
         apiUrl() {
             return this.$store.state.appApiUrl;
         },
+        userId() {
+            return this.$store.state.appUserId;
+        },
     },
     async mounted() {
         const res = await this.getResult();
-        if (!res.status) {
-            this.$store.dispatch("appMesageShow", {
-                type: "error",
-                text: "getUserInfo(): \r\n " + res.result,
-            });
-        } else {
+        if (res.status) {
             this.result = res.result;
         }
     },

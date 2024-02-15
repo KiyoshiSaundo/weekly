@@ -24,10 +24,13 @@
                     ({{ totalDays }})
                 </span>
             </div>
-            <p>
-                Количество рабочих дней⁠/⁠часов можно сократить кликнув по
-                дням⁠/⁠часам в нужном месяце
-            </p>
+            <div
+                v-if="!isFirstLoading"
+                class="report-yearly__notes attention-text"
+            >
+                Количество рабочих дней⁠ (⁠часов) можно сократить кликнув по ним
+                в нужном месяце (в левой части отчета)
+            </div>
         </div>
     </div>
 </template>
@@ -260,6 +263,15 @@ export default {
 
         span:nth-of-type(2) {
             font-weight: 400;
+        }
+    }
+
+    &__notes {
+        margin-top: calc($gap / 2);
+        font-weight: 400;
+
+        @media print {
+            display: none;
         }
     }
 }
