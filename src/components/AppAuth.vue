@@ -23,8 +23,7 @@ export default {
     },
     data() {
         return {
-            // appApiUrl: this.$store.state.appApiUrl || "",
-            appApiUrl: "https://utlab.bitrix24.ru/rest/59/4u1kuwo2ry536c20/",
+            appApiUrl: this.$store.state.appApiUrl || "",
         };
     },
     methods: {
