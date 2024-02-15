@@ -83,3 +83,8 @@ button {
 .mono {
     font-feature-settings: "tnum";
 }
+
+.attention-text {
+    color: lighten($color-red, 20);
+    font-weight: 600;
+}
