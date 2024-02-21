@@ -7,7 +7,10 @@ import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default {
+    server: {
+        port: 3000,
+    },
     base: "/weekly/",
     build: {
         outDir: "./docs",
@@ -36,4 +39,4 @@ export default defineConfig({
             },
         },
     },
-});
+};
