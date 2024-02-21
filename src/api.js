@@ -151,6 +151,7 @@ export const getApiUsers = async (url) => {
 
     let filter = {
         ACTIVE: "true",
+        USER_TYPE: "employee",
     };
 
     if (
