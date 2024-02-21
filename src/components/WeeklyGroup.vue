@@ -95,7 +95,6 @@ export default {
         display: inline-block;
         font-weight: 600;
         padding-left: calc(22px + 5px);
-        user-select: none;
 
         &:hover {
             color: $color-accent;

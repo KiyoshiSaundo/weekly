@@ -1,5 +1,5 @@
 import { createStore } from "vuex";
-import { getCurrWeek, getCurrYear } from "@/functions";
+import { getCurrDay, getCurrWeek, getCurrYear } from "@/functions";
 import { getB24Storage, getB24WeeklyFile, getB24FileData } from "@/api";
 import { menuItems } from "@/settings";
 
@@ -18,9 +18,10 @@ const menuCurrent = localStorage.menuCurrent || menuItems[0].page;
 const weeklyUserId =
     localStorage.weeklyUserId || localStorage.apiUserId || false;
 
-const [weeklyStart, weeklyEnd] = getCurrWeek();
-if (localStorage.weeklyStart) weeklyStart.setTime(localStorage.weeklyStart);
-if (localStorage.weeklyEnd) weeklyEnd.setTime(localStorage.weeklyEnd);
+const [weeklyStart, weeklyEnd] = getCurrDay();
+// const [weeklyStart, weeklyEnd] = getCurrWeek();
+// if (localStorage.weeklyStart) weeklyStart.setTime(localStorage.weeklyStart);
+// if (localStorage.weeklyEnd) weeklyEnd.setTime(localStorage.weeklyEnd);
 
 const weeklyTimestamp = false;
 
