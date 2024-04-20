@@ -52,14 +52,17 @@ export default {
     props: ["month"],
     data() {
         return {
-            userId:
-                this.$store.state.yearlyUserId || this.$store.state.appUserId,
             opened: false,
             deltaSeconds: this.month.secondsDelta || 0,
             deltaDays: this.month.daysDelta || 0,
         };
     },
     computed: {
+        userId() {
+            return (
+                this.$store.state.yearlyUserId || this.$store.state.appUserId
+            );
+        },
         average() {
             return (
                 (this.month.seconds - this.deltaSeconds) /
