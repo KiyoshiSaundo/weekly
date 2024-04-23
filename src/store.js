@@ -1,6 +1,5 @@
 import { createStore } from "vuex";
-import { getCurrDay, getCurrWeek, getCurrYear } from "@/functions";
-import { getB24Storage, getB24WeeklyFile, getB24FileData } from "@/api";
+import { getCurrDay, getCurrYear } from "@/functions";
 import { menuItems } from "@/settings";
 
 // app
@@ -19,9 +18,6 @@ const weeklyUserId =
     localStorage.weeklyUserId || localStorage.apiUserId || false;
 
 const [weeklyStart, weeklyEnd] = getCurrDay();
-// const [weeklyStart, weeklyEnd] = getCurrWeek();
-// if (localStorage.weeklyStart) weeklyStart.setTime(localStorage.weeklyStart);
-// if (localStorage.weeklyEnd) weeklyEnd.setTime(localStorage.weeklyEnd);
 
 const weeklyTimestamp = false;
 
@@ -34,14 +30,6 @@ const yearlyYear = getCurrYear();
 if (localStorage.yearlyYear) yearlyYear.setTime(localStorage.yearlyYear);
 
 const yearlyTimestamp = false;
-
-const yearlyDeltaSeconds = JSON.parse(localStorage.yearlyDeltaSeconds || "{}");
-const yearlyDeltaDays = JSON.parse(localStorage.yearlyDeltaDays || "{}");
-
-// b24Data
-
-const b24FileData = {};
-const b24FileId = false;
 
 /* store */
 
@@ -66,60 +54,11 @@ export default createStore({
             yearlyUserId,
             yearlyYear,
             yearlyTimestamp,
-
-            yearlyDeltaSeconds,
-            yearlyDeltaDays,
-
-            b24FileData,
-            b24FileId,
         };
     },
     actions: {
-        async appLoaded(context) {
-            // if (appAuth && appApiUrl) {
-            //     // хранилище пользователя
-            //     let storages = await getB24Storage(context.state.appApiUrl);
-            //     if (!storages.status) {
-            //         this.commit("appMessagesAdd", {
-            //             type: "error",
-            //             text: "getB24Storage(): \r\n " + storages.result,
-            //         });
-            //         this.commit("appLoadingChange", false);
-            //         return;
-            //     }
-            //     // файл weekly.data в хранилище
-            //     let files = await getB24WeeklyFile(
-            //         appApiUrl,
-            //         storages.result[0].ID
-            //     );
-            //     if (!files.status) {
-            //         this.commit("appMessagesAdd", {
-            //             type: "error",
-            //             text: "getB24WeeklyFile(): \r\n" + files.result,
-            //         });
-            //         this.commit("appLoadingChange", false);
-            //         return;
-            //     }
-            //     // данные из файла
-            //     let fileData = await getB24FileData(
-            //         files.result[0].DOWNLOAD_URL
-            //     );
-            //     if (!fileData.status) {
-            //         this.commit("appMessagesAdd", {
-            //             type: "error",
-            //             text: "getB24FileData(): \r\n" + fileData.result,
-            //         });
-            //         this.commit("appLoadingChange", false);
-            //         return;
-            //     }
-            //     // данные в store
-            //     this.commit("b24FileDataChange", fileData.result);
-            //     this.commit("appLoadingChange", false);
-            //     // console.log(files.result[0].ID);
-            //     // this.commit("b24FileIdChange", files.result[0].ID);
-            // } else {
-                this.commit("appLoadingChange", false);
-            // }
+        async appLoaded() {
+            this.commit("appLoadingChange", false);
         },
         appLogin(context, payload) {
             this.commit("appMessagesClear");
@@ -129,8 +68,8 @@ export default createStore({
             this.commit("appUserIdChange", payload.appUserId);
             this.commit("menuCurrentChange", context.state.menuItems[0].page);
         },
-        appLogout() {
-            this.commit("appMessagesClear");
+        appLogout(context, payload) {
+            if (!payload?.skipClearMessages) this.commit("appMessagesClear");
             this.commit("appAuthChange", false);
             this.commit("appApiUrlChange", "");
             this.commit("appUserIdChange", false);
@@ -161,40 +100,6 @@ export default createStore({
                 this.commit("yearlyUserIdChange", payload.yearlyUserId);
             if (payload.yearlyYear)
                 this.commit("yearlyYearChange", payload.yearlyYear);
-        },
-        yearlyDeltaSecondsChange(context, payload) {
-            let res = context.state.yearlyDeltaSeconds;
-
-            res = res || {};
-            res[payload.userId] = res[payload.userId] || {};
-            res[payload.userId][payload.year] =
-                res[payload.userId][payload.year] || {};
-
-            if (payload.value) {
-                res[payload.userId][payload.year][payload.month] =
-                    payload.value;
-            } else {
-                delete res[payload.userId][payload.year][payload.month];
-            }
-
-            this.commit("yearlyDeltaSecondsChange", res);
-        },
-        yearlyDeltaDaysChange(context, payload) {
-            let res = context.state.yearlyDeltaDays;
-
-            res = res || {};
-            res[payload.userId] = res[payload.userId] || {};
-            res[payload.userId][payload.year] =
-                res[payload.userId][payload.year] || {};
-
-            if (payload.value) {
-                res[payload.userId][payload.year][payload.month] =
-                    payload.value;
-            } else {
-                delete res[payload.userId][payload.year][payload.month];
-            }
-
-            this.commit("yearlyDeltaDaysChange", res);
         },
     },
     mutations: {
@@ -253,18 +158,6 @@ export default createStore({
         yearlyYearChange(state, payload) {
             state.yearlyYear = payload;
             localStorage.yearlyYear = payload;
-        },
-        yearlyDeltaSecondsChange(state, payload) {
-            state.yearlyDeltaSeconds = payload;
-            localStorage.yearlyDeltaSeconds = JSON.stringify(payload);
-        },
-        yearlyDeltaDaysChange(state, payload) {
-            state.yearlyDeltaDays = payload;
-            localStorage.yearlyDeltaDays = JSON.stringify(payload);
-        },
-        // b24
-        b24FileDataChange(state, payload) {
-            state.b24FileData = payload;
         },
     },
 });

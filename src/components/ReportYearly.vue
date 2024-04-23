@@ -1,33 +1,41 @@
 <template>
     <div
         class="report-yearly"
-        :class="{ 'is-loading': !isAppLoading && isLoading }"
+        :class="{
+            'is-loading': !isAppLoading && isLoading,
+        }"
     >
         <div v-if="isAppLoading">Загрузка</div>
         <div v-if="!isAppLoading" class="report-yearly__body">
-            <YearlyMonth v-for="item in result" :key="item.i" :month="item" />
+            <YearlyMonth
+                v-for="item in result"
+                :key="item.i"
+                :month="item"
+                @changeDelta="changeDelta"
+            />
         </div>
-        <div v-if="!isAppLoading" class="report-yearly__aside">
-            <div v-if="!isFirstLoading" class="report-yearly__summary">
+        <div
+            v-if="!isAppLoading && !isFirstLoading"
+            class="report-yearly__aside"
+        >
+            <div class="report-yearly__summary">
                 Рабочее время:
                 <span class="mono">
                     {{ formatTime(totalSeconds - totalDeltaSeconds) }}
                 </span>
                 <span v-if="totalDeltaSeconds > 0" class="mono">
-                    ({{ formatTime(totalSeconds) }})
+                    ({{ formatTime(totalSeconds) }} -
+                    {{ formatTime(totalDeltaSeconds) }})
                 </span>
             </div>
-            <div v-if="!isFirstLoading" class="report-yearly__summary">
+            <div class="report-yearly__summary">
                 Рабочие дни:
                 <span class="mono">{{ totalDays - totalDeltaDays }}</span>
                 <span v-if="totalDeltaDays > 0" class="mono">
-                    ({{ totalDays }})
+                    ({{ totalDays }} - {{ totalDeltaDays }})
                 </span>
             </div>
-            <div
-                v-if="!isFirstLoading"
-                class="report-yearly__notes attention-text"
-            >
+            <div class="report-yearly__notes attention-text">
                 Количество рабочих дней⁠ (⁠часов) можно сократить кликнув по ним
                 в нужном месяце (в левой части отчета)
             </div>
@@ -36,8 +44,14 @@
 </template>
 
 <script>
-import { formatDate, formatTime, unformatTime, getFloat } from "@/functions";
-import { getApiTimes, isYearOff } from "@/api";
+import {
+    formatDate,
+    formatTime,
+    unformatTime,
+    getFloat,
+    getWeeklyFile,
+} from "@/functions";
+import { getApiTimes, isYearOff, updateB24File } from "@/api";
 
 import YearlyMonth from "@/components/YearlyMonth.vue";
 
@@ -47,9 +61,11 @@ export default {
     },
     data() {
         return {
-            isLoading: true,
+            isResultLoading: true,
+            isDeltaLoading: true,
             isFirstLoading: true,
             apiUrl: this.$store.state.appApiUrl,
+            weeklyFile: false,
             result: {},
             months: [
                 "Январь",
@@ -66,9 +82,13 @@ export default {
                 "Декабрь",
             ],
             days: ["вс", "пн", "вт", "ср", "чт", "пт", "сб"],
+            delta: {},
         };
     },
     computed: {
+        isLoading() {
+            return this.isDeltaLoading || this.isResultLoading;
+        },
         isAppLoading() {
             return this.$store.state.appLoading;
         },
@@ -81,20 +101,6 @@ export default {
                 hash: this.$store.state.yearlyTimestamp,
             };
         },
-        deltaSeconds() {
-            return (
-                this.$store.state.b24FileData.yearlyDeltaSeconds ||
-                this.$store.state.yearlyDeltaSeconds ||
-                {}
-            );
-        },
-        deltaDays() {
-            return (
-                this.$store.state.b24FileData.yearlyDeltaDays ||
-                this.$store.state.yearlyDeltaDays ||
-                {}
-            );
-        },
         totalSeconds() {
             return Object.values(this.result).reduce((prev, curr) => {
                 return (prev += curr.seconds);
@@ -102,11 +108,11 @@ export default {
         },
         totalDeltaSeconds() {
             let delta =
-                this.deltaSeconds?.[this.filter.userId]?.[
+                this.delta?.[this.filter.userId]?.[
                     this.filter.year.getFullYear()
                 ] || {};
             return Object.values(delta).reduce((prev, curr) => {
-                return (prev += getFloat(curr));
+                return (prev += getFloat(curr.seconds));
             }, 0);
         },
         totalDays() {
@@ -116,28 +122,100 @@ export default {
         },
         totalDeltaDays() {
             let delta =
-                this.deltaDays?.[this.filter.userId]?.[
+                this.delta?.[this.filter.userId]?.[
                     this.filter.year.getFullYear()
                 ] || {};
             return Object.values(delta).reduce((prev, curr) => {
-                return (prev += getFloat(curr));
+                return (prev += getFloat(curr.days));
             }, 0);
         },
     },
+    async created() {
+        // данные из storage в новый формат
+        // как нибудь потом удалить (добавлено 23/04/2024)
+        const newDelta = JSON.parse(localStorage.yearlyDelta || "{}");
+        if (Object.keys(newDelta).length == 0) {
+            const oldSeconds = JSON.parse(
+                localStorage.yearlyDeltaSeconds || "{}"
+            );
+            const oldDays = JSON.parse(localStorage.yearlyDeltaDays || "{}");
+
+            if (Object.keys(oldDays).length) {
+                for (const [userId, yearData] of Object.entries(oldDays)) {
+                    newDelta[userId] = newDelta[userId] || {};
+                    if (Object.keys(yearData).length) {
+                        for (const [year, monthsData] of Object.entries(
+                            yearData
+                        )) {
+                            newDelta[userId][year] =
+                                newDelta[userId][year] || {};
+                            if (Object.keys(monthsData).length) {
+                                for (const [month, delta] of Object.entries(
+                                    monthsData
+                                )) {
+                                    newDelta[userId][year][month] =
+                                        newDelta[userId][year][month] || {};
+
+                                    newDelta[userId][year][month].days = delta;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (Object.keys(oldSeconds).length) {
+                for (const [userId, yearData] of Object.entries(oldSeconds)) {
+                    newDelta[userId] = newDelta[userId] || {};
+                    if (Object.keys(yearData).length) {
+                        for (const [year, monthsData] of Object.entries(
+                            yearData
+                        )) {
+                            newDelta[userId][year] =
+                                newDelta[userId][year] || {};
+                            if (Object.keys(monthsData).length) {
+                                for (const [month, delta] of Object.entries(
+                                    monthsData
+                                )) {
+                                    newDelta[userId][year][month] =
+                                        newDelta[userId][year][month] || {};
+
+                                    newDelta[userId][year][month].seconds =
+                                        delta;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // console.log(newDelta);
+            localStorage.yearlyDelta = JSON.stringify(newDelta);
+
+            // localStorage.removeItem("yearlyDeltaSeconds");
+            // localStorage.removeItem("yearlyDeltaDays");
+        }
+    },
     async mounted() {
         if (!this.isAppLoading) {
+            if (this.isFirstLoading) this.delta = await this.getDelta();
             this.result = await this.getResult();
         }
     },
     watch: {
         async isAppLoading() {
+            if (this.isFirstLoading) this.delta = await this.getDelta();
             this.result = await this.getResult();
         },
         async filter() {
+            if (this.isFirstLoading) this.delta = await this.getDelta();
             this.result = await this.getResult();
         },
+        delta() {
+            this.isDeltaLoading = false;
+        },
         result() {
-            this.isLoading = false;
+            this.isResultLoading = false;
             this.isFirstLoading = false;
         },
     },
@@ -146,9 +224,30 @@ export default {
         formatTime,
         unformatTime,
 
+        async getDelta() {
+            if (!this.apiUrl) return {};
+
+            let result = {};
+            this.isDeltaLoading = true;
+
+            this.weeklyFile = await getWeeklyFile(this.$store.state.appApiUrl);
+
+            if (this.weeklyFile.message) {
+                this.$store.dispatch("appMesageShow", this.weeklyFile.message);
+            }
+
+            const storageDelta = JSON.parse(localStorage.yearlyDelta || "{}");
+
+            result =
+                this.weeklyFile?.fileContent?.yearly?.delta ||
+                storageDelta ||
+                {};
+
+            return result;
+        },
         async getResult() {
             if (!this.apiUrl || !this.filter.userId) return {};
-            this.isLoading = true;
+            this.isResultLoading = true;
 
             let result = {},
                 year = this.filter.year.getFullYear(),
@@ -171,16 +270,20 @@ export default {
                     i: i,
                     name: this.months[i],
                     year: year,
-                    days: monthOff.filter((d) => d == 0).length,
-                    daysDelta:
-                        parseFloat(
-                            this.deltaDays?.[this.filter.userId]?.[year]?.[i]
-                        ) || 0,
                     seconds: 0,
-                    secondsDelta:
-                        parseFloat(
-                            this.deltaSeconds?.[this.filter.userId]?.[year]?.[i]
-                        ) || 0,
+                    days: monthOff.filter((d) => d == 0).length,
+                    delta: {
+                        seconds:
+                            parseFloat(
+                                this.delta?.[this.filter.userId]?.[year]?.[i]
+                                    ?.seconds
+                            ) || 0,
+                        days:
+                            parseFloat(
+                                this.delta?.[this.filter.userId]?.[year]?.[i]
+                                    ?.days
+                            ) || 0,
+                    },
                     daily: {},
                 };
 
@@ -205,6 +308,87 @@ export default {
             });
 
             return result;
+        },
+
+        async changeDelta(newData) {
+            this.isDeltaLoading = true;
+
+            if (!this.filter.userId || !this.filter.year.getFullYear()) {
+                this.$store.dispatch("appMesageShow", {
+                    type: "error",
+                    text: "Не хватает данных для сохрания",
+                });
+                this.isDeltaLoading = false;
+                return;
+            }
+
+            let userId = this.filter.userId,
+                year = this.filter.year.getFullYear(),
+                delta = JSON.parse(JSON.stringify(this.delta)),
+                result = JSON.parse(JSON.stringify(this.result)),
+                fileContent = JSON.parse(
+                    JSON.stringify(this.weeklyFile.fileContent)
+                );
+
+            /* delta */
+
+            // структура дельты
+            delta[userId] = delta[userId] || {};
+            delta[userId][year] = delta[userId][year] || {};
+            delta[userId][year][newData.month] =
+                delta[userId][year][newData.month] || {};
+
+            // время
+            if (newData.seconds > 0) {
+                delta[userId][year][newData.month].seconds = newData.seconds;
+            } else {
+                delete delta[userId][year][newData.month].seconds;
+            }
+
+            // дни
+            if (newData.days > 0) {
+                delta[userId][year][newData.month].days = newData.days;
+            } else {
+                delete delta[userId][year][newData.month].days;
+            }
+
+            /* result (месяцы) */
+
+            result[newData.month].delta.seconds = newData.seconds;
+            result[newData.month].delta.days = newData.days;
+
+            /* storage */
+
+            localStorage.yearlyDelta = JSON.stringify(delta);
+
+            /* b24 */
+
+            if (this.apiUrl && this.weeklyFile.fileId) {
+                fileContent.yearly.delta = delta;
+
+                let updateRes = await updateB24File(this.apiUrl, {
+                    fileId: this.weeklyFile.fileId,
+                    fileContent: fileContent,
+                });
+                if (updateRes.status != 1) {
+                    this.$store.dispatch("appMesageShow", {
+                        type: "error",
+                        text: "updateB24File():\r\n" + updateRes.result,
+                    });
+                }
+            } else {
+                this.$store.dispatch("appMesageShow", {
+                    type: "error",
+                    text: "Не хватает данных для сохрания в b24",
+                });
+            }
+
+            /* обновляем данные компонента */
+
+            this.isDeltaLoading = false;
+            this.delta = delta;
+            this.result = result;
+            this.weeklyFile.fileContent = fileContent;
         },
     },
 };
@@ -260,9 +444,12 @@ export default {
 
     &__summary {
         font-weight: 600;
+        margin-bottom: calc($gap / 4);
 
         span:nth-of-type(2) {
             font-weight: 400;
+            display: block;
+            font-size: 80%;
         }
     }
 

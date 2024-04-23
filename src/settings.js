@@ -15,3 +15,5 @@ export const menuItems = [
     { name: "Неделька", page: "PageReportWeekly" },
     { name: "Годик", page: "PageReportYearly" },
 ];
+
+export const needScopes = [];

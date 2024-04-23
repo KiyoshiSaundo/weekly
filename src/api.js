@@ -1,4 +1,5 @@
 import { usersToUser } from "@/settings.js";
+import { getUserIdFromApiUrl, getBase64 } from "@/functions.js";
 
 // проверка доступных прав
 export const checkAccess = async (url) => {
@@ -176,7 +177,7 @@ export const getApiUsers = async (url) => {
     });
 };
 
-// https://isdayoff.ru/api/getdata?year=2022&month=01&delimeter=|&covid=1
+// рабочие/выходные/праздничные дни в месяце - https://isdayoff.ru/api/getdata?year=2022&month=01&delimeter=|&covid=1
 export const isMonthOff = async (year, month) => {
     return fetch(
         "https://isdayoff.ru/api/getdata?year=" +
@@ -189,7 +190,7 @@ export const isMonthOff = async (year, month) => {
     });
 };
 
-// https://isdayoff.ru/api/getdata?year=2022&delimeter=|&covid=1
+// рабочие/выходные/праздничные дни в году -  https://isdayoff.ru/api/getdata?year=2022&delimeter=|&covid=1
 export const isYearOff = async (year) => {
     return fetch(
         "https://isdayoff.ru/api/getdata?year=" + year + "&delimeter=&covid=1"
@@ -198,8 +199,10 @@ export const isYearOff = async (year) => {
     });
 };
 
-export const getB24Storage = async (url) => {
+// хранилище пользователя в b24
+export const getB24UserStorage = async (url) => {
     return await fetch(url + "/disk.storage.getlist", {
+        // delay: 10000,
         method: "post",
         headers: {
             "Content-Type": "application/json",
@@ -207,6 +210,7 @@ export const getB24Storage = async (url) => {
         body: JSON.stringify({
             filter: {
                 ENTITY_TYPE: "user",
+                ENTITY_ID: getUserIdFromApiUrl(url),
             },
         }),
     })
@@ -219,13 +223,13 @@ export const getB24Storage = async (url) => {
                 };
             } else if (response.total == 0) {
                 return {
-                    status: 0,
+                    status: 2,
                     result: "Не найдено хранилище",
                 };
             } else {
                 return {
                     status: 1,
-                    result: response.result,
+                    result: response.result[0],
                 };
             }
         })
@@ -237,16 +241,17 @@ export const getB24Storage = async (url) => {
         });
 };
 
-export const getB24WeeklyFile = async (url, storageId) => {
+// файл в хранилище b24
+export const getB24File = async (url, data) => {
     return await fetch(url + "/disk.storage.getchildren", {
         method: "post",
         headers: {
             "Content-Type": "application/json",
         },
         body: JSON.stringify({
-            id: storageId,
+            id: data.storageId,
             filter: {
-                NAME: "weekly.data",
+                NAME: data.fileName,
                 TYPE: "file",
             },
         }),
@@ -260,13 +265,13 @@ export const getB24WeeklyFile = async (url, storageId) => {
                 };
             } else if (response.total == 0) {
                 return {
-                    status: 0,
+                    status: 2,
                     result: "Не найден файл",
                 };
             } else {
                 return {
                     status: 1,
-                    result: response.result,
+                    result: response.result[0],
                 };
             }
         })
@@ -278,7 +283,8 @@ export const getB24WeeklyFile = async (url, storageId) => {
         });
 };
 
-export const getB24FileData = async (url) => {
+// содержимое файла в хранилище b24
+export const getB24FileContent = async (url) => {
     return await fetch(url, {
         method: "get",
         headers: {
@@ -293,7 +299,70 @@ export const getB24FileData = async (url) => {
             };
         })
         .catch((response) => {
-            console.log(response);
+            return {
+                status: 0,
+                result: response,
+            };
+        });
+};
+
+// создать файл в корне хранилища b24
+export const createB24File = async (url, data) => {
+    return await fetch(url + "/disk.storage.uploadfile", {
+        method: "post",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            id: data.storageId,
+            data: {
+                NAME: data.fileName,
+            },
+            fileContent: data.fileContent,
+        }),
+    })
+        .then((response) => response.json())
+        .then((response) => {
+            return {
+                status: 1,
+                result: response,
+            };
+        })
+        .catch((response) => {
+            return {
+                status: 0,
+                result: response,
+            };
+        });
+};
+
+// обновить файл в хранилище b24
+export const updateB24File = async (url, data) => {
+    return await fetch(url + "/disk.file.uploadversion", {
+        method: "post",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            id: data.fileId,
+            fileContent: getBase64(data.fileContent),
+        }),
+    })
+        .then((response) => response.json())
+        .then((response) => {
+            if (response.error !== undefined) {
+                return {
+                    status: 0,
+                    result: response.error_description,
+                };
+            } else {
+                return {
+                    status: 1,
+                    result: response.result,
+                };
+            }
+        })
+        .catch((response) => {
             return {
                 status: 0,
                 result: response,
@@ -336,4 +405,13 @@ const getAll = async (url, body) => {
     }
 
     return Promise.all(result);
+};
+
+// fetch с возможностью задать задержку (delay: 2000)
+export const fetchDelay = async (url, options) => {
+    new Promise((resolve) => {
+        setTimeout(() => {
+            resolve(fetch(url, options));
+        }, options.delay);
+    });
 };

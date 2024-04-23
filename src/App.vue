@@ -16,6 +16,8 @@
 </template>
 
 <script>
+import { checkAccess } from "@/api";
+
 import AppNotify from "@/components/AppNotify.vue";
 import AppAuth from "@/components/AppAuth.vue";
 import AppName from "@/components/AppName.vue";
@@ -37,8 +39,22 @@ export default {
         PageReportYearly,
         PageAppSettings,
     },
-    created() {
-        this.$store.dispatch("appLoaded");
+    async created() {
+        if (this.$store.state.appApiUrl) {
+            let check = await checkAccess(this.$store.state.appApiUrl);
+            if (check.status == 0 && check.result == 401) {
+                this.$store.dispatch("appLoaded");
+                this.$store.dispatch("appLogout", { skipClearMessages: true });
+                this.$store.dispatch("appMesageShow", {
+                    type: "error",
+                    text: "Неверная строка api\r\n Нужна повторная авторизация",
+                });
+            } else {
+                this.$store.dispatch("appLoaded");
+            }
+        } else {
+            this.$store.dispatch("appLoaded");
+        }
     },
     computed: {
         isAppLoading() {
