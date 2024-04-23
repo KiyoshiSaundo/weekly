@@ -8,25 +8,27 @@
             <label class="yearly-month__time">
                 {{ formatTime(month.seconds) }}
                 <input
+                    ref="inputSeconds"
                     v-mask="{
                         regex: '[0-9]*\:[0-5][0-9]\:[0-5][0-9]',
                         numericInput: true,
                     }"
                     class="yearly-month__delta"
                     type="text"
-                    :value="deltaSeconds > 0 ? formatTime(deltaSeconds) : ''"
-                    @change="deltaSecondsChange"
+                    :value="delta.seconds > 0 ? formatTime(delta.seconds) : ''"
+                    @change="changeDelta"
                 />
             </label>
             /
             <label class="yearly-month__days">
                 {{ month.days }}
                 <input
+                    ref="inputDays"
                     v-mask="{ regex: '[0-9]*[.,]?[0-9]*', numericInput: true }"
                     class="yearly-month__delta"
                     type="text"
-                    :value="deltaDays > 0 ? deltaDays : ''"
-                    @change="deltaDaysChange"
+                    :value="delta.days > 0 ? delta.days : ''"
+                    @change="changeDelta"
                 />
             </label>
             =
@@ -39,7 +41,7 @@
 </template>
 
 <script>
-import { formatTime, unformatTime } from "@/functions";
+import { formatTime, unformatTime, getFloat } from "@/functions";
 
 import SvgIcon from "@/components/SvgIcon.vue";
 import YearlyDay from "@/components/YearlyDay.vue";
@@ -50,11 +52,14 @@ export default {
         YearlyDay,
     },
     props: ["month"],
+    emits: ["changeDelta"],
     data() {
         return {
             opened: false,
-            deltaSeconds: this.month.secondsDelta || 0,
-            deltaDays: this.month.daysDelta || 0,
+            delta: {
+                seconds: this.month.delta.seconds || 0,
+                days: this.month.delta.days || 0,
+            },
         };
     },
     computed: {
@@ -65,16 +70,16 @@ export default {
         },
         average() {
             return (
-                (this.month.seconds - this.deltaSeconds) /
+                (this.month.seconds - this.delta.seconds) /
                 3600 /
-                (this.month.days - this.deltaDays)
+                (this.month.days - this.delta.days)
             ).toFixed(2);
         },
     },
     watch: {
         month() {
-            this.deltaSeconds = this.month.secondsDelta || 0;
-            this.deltaDays = this.month.daysDelta || 0;
+            this.delta.seconds = this.month.delta.seconds || 0;
+            this.delta.days = this.month.delta.days || 0;
         },
     },
     methods: {
@@ -84,24 +89,22 @@ export default {
         toggle() {
             this.opened = !this.opened;
         },
-        deltaSecondsChange(event) {
-            this.deltaSeconds =
-                parseFloat(this.unformatTime(event.target.value)) || 0;
-            this.$store.dispatch("yearlyDeltaSecondsChange", {
-                userId: this.userId,
-                year: this.month.year,
-                month: this.month.i,
-                value: this.deltaSeconds,
-            });
-        },
-        deltaDaysChange(event) {
-            this.deltaDays = parseFloat(event.target.value) || 0;
-            this.$store.dispatch("yearlyDeltaDaysChange", {
-                userId: this.userId,
-                year: this.month.year,
-                month: this.month.i,
-                value: this.deltaDays,
-            });
+        changeDelta() {
+            let oldSeconds = this.month.delta.seconds,
+                newSeconds =
+                    getFloat(
+                        this.unformatTime(this.$refs.inputSeconds.value)
+                    ) || 0,
+                oldDays = this.month.delta.days,
+                newDays = getFloat(this.$refs.inputDays.value) || 0;
+
+            if (oldSeconds != newSeconds || oldDays != newDays) {
+                this.$emit("changeDelta", {
+                    month: this.month.i,
+                    seconds: newSeconds,
+                    days: newDays,
+                });
+            }
         },
     },
 };
