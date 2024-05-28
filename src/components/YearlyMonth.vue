@@ -32,7 +32,27 @@
                 />
             </label>
             =
-            <span class="yearly-month__average">{{ average }}</span>
+            <span
+                :class="{ 'is-extended': month.seconds }"
+                class="yearly-month__average"
+                @click="toggleExtended"
+            >
+                {{ average }}
+            </span>
+            <div
+                v-if="month.seconds"
+                ref="extended"
+                class="yearly-month__extended"
+            >
+                Затраченное время: {{ formatTime(month.seconds) }}
+                <br />
+                <br />
+                Рабочих дней: {{ month.days }}
+                <br />
+                Отгулы: {{ delta.days }}
+                <br />
+                Отработано: {{ month.days - delta.days }}
+            </div>
         </div>
         <div class="yearly-month__daily">
             <YearlyDay v-for="(day, k) in month.daily" :key="k" :day="day" />
@@ -44,12 +64,14 @@
 import { formatTime, unformatTime, getFloat } from "@/functions";
 
 import SvgIcon from "@/components/SvgIcon.vue";
+import HelpIcon from "@/components/HelpIcon.vue";
 import YearlyDay from "@/components/YearlyDay.vue";
 
 export default {
     components: {
         SvgIcon,
         YearlyDay,
+        HelpIcon,
     },
     props: ["month"],
     emits: ["changeDelta"],
@@ -82,12 +104,37 @@ export default {
             this.delta.days = this.month.delta.days || 0;
         },
     },
+    mounted() {
+        document.addEventListener("click", (e) => {
+            if (
+                !e.target.classList.contains("yearly-month__average") &&
+                !e.target.classList.contains("yearly-month__extended")
+            ) {
+                document
+                    .querySelectorAll(".yearly-month__extended")
+                    .forEach((item) => {
+                        item.classList.remove("is-open");
+                    });
+            }
+        });
+    },
     methods: {
         formatTime,
         unformatTime,
 
         toggle() {
             this.opened = !this.opened;
+        },
+        toggleExtended() {
+            document
+                .querySelectorAll(".yearly-month__extended")
+                .forEach((item) => {
+                    if (item != this.$refs.extended) {
+                        item.classList.remove("is-open");
+                    } else {
+                        item.classList.toggle("is-open");
+                    }
+                });
         },
         changeDelta() {
             let oldSeconds = this.month.delta.seconds,
@@ -169,6 +216,7 @@ export default {
     }
 
     &__result {
+        position: relative;
         font-size: 12px;
         display: inline-flex;
         align-items: baseline;
@@ -212,6 +260,31 @@ export default {
         font-size: 16px;
         font-weight: 600;
         margin-left: 5px;
+
+        &.is-extended {
+            cursor: pointer;
+
+            &:hover {
+                color: $color-accent;
+            }
+        }
+    }
+
+    &__extended {
+        display: none;
+        position: absolute;
+        z-index: 10;
+        font-size: 14px;
+        top: 100%;
+        right: 0;
+        background: $color-white;
+        border: $border;
+        padding: calc($gap / 4);
+        white-space: nowrap;
+
+        &.is-open {
+            display: block;
+        }
     }
 
     &__daily {
