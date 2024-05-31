@@ -1,4 +1,4 @@
-$font-family: 'Montserrat';
+$font-family: "Montserrat";
 
 $color-grey: #f4f4f4;
 $color-white: #fff;
@@ -12,3 +12,9 @@ $color-green: darken(#0f0, 30%);
 $gap: 48px;
 
 $border: 1px solid $color-border;
+
+$average-color-default: $color-border;
+$average-color-crit: #f00;
+$average-color-min: #ff8000;
+$average-color-norm: $color-text;
+$average-color-max: darken(#0f0, 10%);

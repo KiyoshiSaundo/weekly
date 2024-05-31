@@ -11,6 +11,7 @@
                 v-for="item in result"
                 :key="item.i"
                 :month="item"
+                :settings="settings"
                 @changeDelta="changeDelta"
             />
         </div>
@@ -63,6 +64,7 @@ export default {
         return {
             isResultLoading: true,
             isDeltaLoading: true,
+            isSettingsLoading: true,
             isFirstLoading: true,
             apiUrl: this.$store.state.appApiUrl,
             weeklyFile: false,
@@ -83,11 +85,16 @@ export default {
             ],
             days: ["вс", "пн", "вт", "ср", "чт", "пт", "сб"],
             delta: {},
+            settings: {},
         };
     },
     computed: {
         isLoading() {
-            return this.isDeltaLoading || this.isResultLoading;
+            return (
+                this.isDeltaLoading ||
+                this.isResultLoading ||
+                this.isSettingsLoading
+            );
         },
         isAppLoading() {
             return this.$store.state.appLoading;
@@ -199,20 +206,26 @@ export default {
     async mounted() {
         if (!this.isAppLoading) {
             if (this.isFirstLoading) this.delta = await this.getDelta();
+            this.settings = await this.getSettings();
             this.result = await this.getResult();
         }
     },
     watch: {
         async isAppLoading() {
             if (this.isFirstLoading) this.delta = await this.getDelta();
+            this.settings = await this.getSettings();
             this.result = await this.getResult();
         },
         async filter() {
             if (this.isFirstLoading) this.delta = await this.getDelta();
+            this.settings = await this.getSettings();
             this.result = await this.getResult();
         },
         delta() {
             this.isDeltaLoading = false;
+        },
+        settings() {
+            this.isSettingsLoading = false;
         },
         result() {
             this.isResultLoading = false;
@@ -306,6 +319,32 @@ export default {
                 result[date.getMonth()].daily[date.getDate()].seconds +=
                     parseInt(item.SECONDS);
             });
+
+            return result;
+        },
+        async getSettings() {
+            if (
+                !this.apiUrl ||
+                !this.filter.userId ||
+                this.filter.userId != this.$store.state.appUserId
+            )
+                return {};
+
+            let result = {};
+            this.isSettingsLoading = true;
+
+            this.weeklyFile = await getWeeklyFile(this.$store.state.appApiUrl);
+
+            if (this.weeklyFile.message) {
+                this.$store.dispatch("appMesageShow", this.weeklyFile.message);
+            }
+
+            const storageSettings = JSON.parse(
+                localStorage.appSettings || "{}"
+            );
+
+            result =
+                this.weeklyFile?.fileContent?.settings || storageSettings || {};
 
             return result;
         },

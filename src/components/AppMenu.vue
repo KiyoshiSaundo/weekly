@@ -15,10 +15,21 @@
 </template>
 
 <script>
+import { usersGroups } from "@/settings";
+import { intersect } from "@/functions";
+
 export default {
     computed: {
         items() {
-            return this.$store.state.menuItems;
+            const userGroups = usersGroups[this.$store.state.appUserId] || [];
+            return this.$store.state.menuItems.filter((item) => {
+                if (
+                    !item.groups ||
+                    (item.groups && intersect(item.groups, userGroups).length)
+                ) {
+                    return item;
+                }
+            });
         },
         active() {
             return this.$store.state.menuCurrent || this.items[0].page;

@@ -181,5 +181,14 @@ export const getWeeklyFile = async (url) => {
 };
 
 export const getBase64 = (data) => {
-    return btoa(JSON.stringify(data));
+    data = new TextEncoder().encode(JSON.stringify(data));
+    data = Array.from(data, (byte) => String.fromCodePoint(byte)).join("");
+    return btoa(data);
+};
+
+export const intersect = (a, b) => {
+    var setA = new Set(a);
+    var setB = new Set(b);
+    var intersection = new Set([...setA].filter((x) => setB.has(x)));
+    return Array.from(intersection);
 };

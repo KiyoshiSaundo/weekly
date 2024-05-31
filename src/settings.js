@@ -11,9 +11,18 @@ export const usersToUser = {
     59: ["*"],
 };
 
+export const usersGroups = {
+    19: ["developer"],
+    59: ["developer"],
+    827: ["developer"],
+    1165: ["developer"],
+};
+
 export const menuItems = [
     { name: "Неделька", page: "PageReportWeekly" },
     { name: "Годик", page: "PageReportYearly" },
+    { name: "hr", groups: ["developer"] },
+    { name: "Настройки", page: "PageAppSettings", groups: ["developer"] },
 ];
 
 export const needScopes = [];

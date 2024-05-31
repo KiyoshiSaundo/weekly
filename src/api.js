@@ -179,24 +179,38 @@ export const getApiUsers = async (url) => {
 
 // рабочие/выходные/праздничные дни в месяце - https://isdayoff.ru/api/getdata?year=2022&month=01&delimeter=|&covid=1
 export const isMonthOff = async (year, month) => {
-    return fetch(
-        "https://isdayoff.ru/api/getdata?year=" +
-            year +
-            "&month=" +
-            month +
-            "&delimeter=|&covid=1"
-    ).then((response) => {
-        return response.text();
-    });
+    if (localStorage.getItem("isMonthOff" + year + month)) {
+        return localStorage.getItem("isMonthOff" + year + month);
+    } else {
+        const res = await fetch(
+            "https://isdayoff.ru/api/getdata?year=" +
+                year +
+                "&month=" +
+                month +
+                "&delimeter=|&covid=1"
+        ).then((response) => {
+            return response.text();
+        });
+        localStorage.setItem("isMonthOff" + year + month, res);
+        return res;
+    }
 };
 
 // рабочие/выходные/праздничные дни в году -  https://isdayoff.ru/api/getdata?year=2022&delimeter=|&covid=1
 export const isYearOff = async (year) => {
-    return fetch(
-        "https://isdayoff.ru/api/getdata?year=" + year + "&delimeter=&covid=1"
-    ).then((response) => {
-        return response.text();
-    });
+    if (localStorage.getItem("isYearOff" + year)) {
+        return localStorage.getItem("isYearOff" + year);
+    } else {
+        const res = await fetch(
+            "https://isdayoff.ru/api/getdata?year=" +
+                year +
+                "&delimeter=&covid=1"
+        ).then((response) => {
+            return response.text();
+        });
+        localStorage.setItem("isYearOff" + year, res);
+        return res;
+    }
 };
 
 // хранилище пользователя в b24
