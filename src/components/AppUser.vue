@@ -4,12 +4,6 @@
             {{ result.NAME }}
         </div>
         <div v-else class="app-user__label">Юзер {{ userId }}</div>
-        <!-- <SvgIcon
-            name="settings"
-            class="app-user__button"
-            title="Настройки"
-            @click="settings"
-        /> -->
         <SvgIcon
             name="logout"
             class="app-user__button"
@@ -48,9 +42,6 @@ export default {
         }
     },
     methods: {
-        settings() {
-            this.$store.dispatch("menuChange", "PageAppSettings");
-        },
         logout() {
             this.$store.dispatch("appLogout");
         },
