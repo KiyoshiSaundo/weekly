@@ -12,6 +12,8 @@ export const usersToUser = {
     589: ["*"],
     // Я
     59: ["*"],
+    // Сережа
+    1049: [1049, 2039, 2035, 1233, 611, 549],
 };
 
 export const usersGroups = {
