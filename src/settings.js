@@ -1,7 +1,7 @@
 export const usersToUser = {
     // Влад
     917: [
-        917, 59, 19, 827, 549, 1049, 1155, 1165, 1405, 1769, 1981, 1963, 1931,
+        917, 59, 19, 827, 549, 1049, 1155, 1405, 1769, 1981, 1963, 1931,
         1903,
     ],
     // Дима
@@ -13,14 +13,16 @@ export const usersToUser = {
     // Я
     59: ["*"],
     // Сережа
-    1049: [1049, 2039, 2035, 1233, 611, 549],
+    1049: [1049, 2039, 2035, 1233, 611, 549, 2099],
 };
 
 export const usersGroups = {
+    1963: ["developer"],
     19: ["developer"],
-    59: ["developer"],
     827: ["developer"],
-    1165: ["developer"],
+    59: ["developer"],
+    1981: ["developer"],
+    1903: ["developer"],
 };
 
 export const menuItems = [
