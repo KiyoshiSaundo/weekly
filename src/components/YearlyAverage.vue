@@ -211,13 +211,13 @@ export default {
 
                 if (stillWorkDays > 0) {
                     let block = {
-                        title: "Сколько нужно закрывать часов<br /> каждый оставшийся рабочий день (не считая сегодня) для",
+                        title: "Сколько нужно закрывать часов в день<br /> (не считая сегодня)",
                         items: [],
                     };
 
                     if (this.averageRounded < this.averageMin) {
                         block.items.push({
-                            label: "минимума",
+                            label: "минимум",
                             value: formatTime(
                                 Math.ceil(secondsMinNeed / (stillWorkDays - 1))
                             ),
@@ -226,7 +226,7 @@ export default {
 
                     if (this.averageRounded < this.averageNorm) {
                         block.items.push({
-                            label: "нормы",
+                            label: "норма",
                             value: formatTime(
                                 Math.ceil(secondsNormNeed / (stillWorkDays - 1))
                             ),
@@ -235,7 +235,7 @@ export default {
 
                     if (this.averageRounded < this.averageMax) {
                         block.items.push({
-                            label: "премии",
+                            label: "премия",
                             value: formatTime(
                                 Math.ceil(secondsMaxNeed / (stillWorkDays - 1))
                             ),
