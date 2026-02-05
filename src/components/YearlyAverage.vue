@@ -211,7 +211,7 @@ export default {
 
                 if (stillWorkDays > 0) {
                     let block = {
-                        title: "Сколько нужно закрывать часов<br /> каждый оставшийся рабочий день для",
+                        title: "Сколько нужно закрывать часов<br /> каждый оставшийся рабочий день (не считая сегодня) для",
                         items: [],
                     };
 
@@ -219,7 +219,7 @@ export default {
                         block.items.push({
                             label: "минимума",
                             value: formatTime(
-                                Math.ceil(secondsMinNeed / stillWorkDays)
+                                Math.ceil(secondsMinNeed / (stillWorkDays - 1))
                             ),
                         });
                     }
@@ -228,7 +228,7 @@ export default {
                         block.items.push({
                             label: "нормы",
                             value: formatTime(
-                                Math.ceil(secondsNormNeed / stillWorkDays)
+                                Math.ceil(secondsNormNeed / (stillWorkDays - 1))
                             ),
                         });
                     }
@@ -237,7 +237,7 @@ export default {
                         block.items.push({
                             label: "премии",
                             value: formatTime(
-                                Math.ceil(secondsMaxNeed / stillWorkDays)
+                                Math.ceil(secondsMaxNeed / (stillWorkDays - 1))
                             ),
                         });
                     }
