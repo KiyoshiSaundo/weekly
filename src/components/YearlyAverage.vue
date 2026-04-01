@@ -209,7 +209,7 @@ export default {
                     }
                 }
 
-                if (stillWorkDays > 0) {
+                if (stillWorkDays - 1 > 0) {
                     let block = {
                         title: "Сколько нужно закрывать часов в день<br /> (не считая сегодня)",
                         items: [],
