@@ -176,6 +176,7 @@ export default {
                 ">=CREATED_DATE": formatDate(this.filter.start) + " 00:00:00",
                 "<=CREATED_DATE": formatDate(this.filter.end) + " 23:59:59",
             });
+            console.log("rr", timeItems);
             // задачи
             if (timeItems.length) {
                 taskItems = await getApiTasks(this.apiUrl, {

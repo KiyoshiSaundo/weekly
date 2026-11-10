@@ -27,24 +27,15 @@ export const checkAccess = async (url) => {
 
 // затраченное время по фильтру
 export const getApiTimes = async (url, filter = []) => {
-    return fetch(url + "/task.elapseditem.getlist", {
-        method: "post",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            order: { ID: "asc" },
-            filter: filter,
-            select: ["ID", "TASK_ID", "SECONDS", "CREATED_DATE"],
-            params: {
-                NAV_PARAMS: { nPageSize: 0 },
-            },
-        }),
-    })
-        .then((response) => response.json())
-        .then((response) => {
-            return response.result;
-        });
+    return getAllNavParams(url + "/task.elapseditem.getlist", {
+        order: { ID: "asc" },
+        filter: filter,
+        select: ["ID", "TASK_ID", "SECONDS", "CREATED_DATE"],
+    }).then((result) => {
+        return result.reduce((prev, curr) => {
+            return prev.concat(curr.result);
+        }, []);
+    });
 };
 
 // список задач по фильтру
@@ -416,6 +407,42 @@ const getAll = async (url, body) => {
         }
         result.push(response);
         next += 50;
+    }
+
+    return Promise.all(result);
+};
+
+// все записи из постранички 2
+const getAllNavParams = async (url, body) => {
+    const get = (url, body, size, page) => {
+        body.params = {
+            NAV_PARAMS: {
+                nPageSize: size,
+                iNumPage: page,
+            },
+        };
+        return fetch(url, {
+            method: "post",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(body),
+        }).then((response) => response.json());
+    };
+
+    let result = [];
+    let size = 50;
+    let total = null;
+    let page = 1;
+
+    while (total === null || page <= Math.ceil(total / size)) {
+        let response = get(url, body, size, page);
+        if (total === null) {
+            let res = await response;
+            total = parseInt(res.total);
+        }
+        result.push(response);
+        page++;
     }
 
     return Promise.all(result);
