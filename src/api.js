@@ -400,6 +400,7 @@ const getAll = async (url, body) => {
     let total = null;
 
     while (total === null || next < total) {
+        await sleep(500);
         let response = get(url, body, next);
         if (total === null) {
             let res = await response;
@@ -436,6 +437,7 @@ const getAllNavParams = async (url, body) => {
     let page = 1;
 
     while (total === null || page <= Math.ceil(total / size)) {
+        await sleep(500);
         let response = get(url, body, size, page);
         if (total === null) {
             let res = await response;
@@ -456,3 +458,5 @@ export const fetchDelay = async (url, options) => {
         }, options.delay);
     });
 };
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
